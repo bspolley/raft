@@ -16,9 +16,8 @@ LEADER = 3
   end
   
   bloom :follower do
-    course <= server_type do |t|
-      t if t.first == FOLLOWER
-    end
+    some_var <= (server_type * [[FOLLOWER]]).pairs(:state => :state)
+    
     
   end
   
@@ -26,7 +25,7 @@ LEADER = 3
     course <= server_type do |t|
       t if t.first == CANDIDATE
     end
-    
+
   end
   
   bloom :leader do

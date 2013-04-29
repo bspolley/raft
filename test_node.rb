@@ -1,25 +1,25 @@
 require 'rubygems'
 require 'bud'
 require 'test/unit'
-require 'leader_election'
+require 'node'
 
-class TestLeaderElection < Test::Unit::TestCase
-  class LE
+class TestNode < Test::Unit::TestCase
+  class N
     include Bud
-    include LeaderElection
+    include Node
   end
   
   def setup
-    @p1 = LE.new
+    @p1 = N.new
     @p1.run_bg
-    @p2 = LE.new
+    @p2 = N.new
     @p2.run_bg
-    @p3 = LE.new
+    @p3 = N.new
     @p3.run_bg
   end
   
   def test_rowo
-    @p1.server_type <+ [[LE::FOLLOWER]]
+    @p1.server_type <+ [[N::FOLLOWER]]
     @p1.tick
     @p1.tick
     @p1.tick
