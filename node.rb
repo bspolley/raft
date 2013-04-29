@@ -3,11 +3,12 @@ require 'bud'
 
 module NodeProtocol
 
-  channel   :SndRequestVote, [:candidate, :@me, :term, :last_index, :last_term] 
-  channel   :RspRequestVote, [:@candidate, :me, :term, :granted]
-  channel   :SndAppendEntries, [:leader, :@me, :term, :prev_index, :prev_term, :entry, :commit_index]
-  channel   :RspAppendEntries, [:@leader, :me, :term, :success]
-
+  state do
+    channel   :SndRequestVote, [:candidate, :@me, :term, :last_index, :last_term] 
+    channel   :RspRequestVote, [:@candidate, :me, :term, :granted]
+    channel   :SndAppendEntries, [:leader, :@me, :term, :prev_index, :prev_term, :entry, :commit_index]
+    channel   :RspAppendEntries, [:@leader, :me, :term, :success]
+  end
 end
   
 module Node

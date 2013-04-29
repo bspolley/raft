@@ -13,7 +13,7 @@ module Follower
     table :current_term, [] => [:term]
     table :voted_for, [] => [:term]
     scratch :valid_vote, [] => [:term]
-    scratch :first, SndRequestVote.schema
+    scratch :test, RspRequestVote.schema
   end
   
   bloom :leader_election do
@@ -21,10 +21,10 @@ module Follower
       [s.term] if s.term > current_term.first
     end
     voted_for <= SndRequestVote do |s|
-      [s.term] if s.term > current_term
+      [s.term] if s.term > current_term.first
     end
     first <= [SndRequestVote.reject(|s| if s.term <= current_term).first]
-    RspRequestVote <= (voted_for * first).rights do |s|
+    test <= (voted_for * first).rights do |s|
       [s.candidate, s.me, s.term, true]
     end
   end
