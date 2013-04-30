@@ -2,6 +2,10 @@ require 'rubygems'
 require 'bud'
 
 module NodeProtocol
+  FOLLOWER = 1
+  CANDIDATE = 2
+  LEADER = 3
+  
   state do
     channel   :sndRequestVote, [:candidate, :@me, :term, :last_index, :last_term] 
     channel   :rspRequestVote, [:@candidate, :me, :term, :granted]

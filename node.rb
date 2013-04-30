@@ -7,9 +7,7 @@ require 'candidate'
 require 'leader'
   
 module Node
-  FOLLOWER = 1
-  CANDIDATE = 2
-  LEADER = 3
+
   include NodeProtocol
   include StaticMembership
 
@@ -25,15 +23,15 @@ module Node
     table :log, [:index] => [:term, :command]
     table :current_term, [] => [:term]
     table :commit_index, [] => [:index]
-    scratch :mm, [:ident] => [:wiggy]
   end
   
   bootstrap do
+    current_term <= [[0]]
   end
   
   bloom :follower do
     f <= server_type do |s|
-      s if s.first == FOLLOWER
+      s if s.first == NodeProtocol::FOLLOWER
     end
     follower.sndRequestVote <~ (f * sndRequestVote).rights
     rspRequestVote <~ (f * follower.rspRequestVote).rights
@@ -44,13 +42,14 @@ module Node
     follower.current_term <= current_term
     current_term <+ follower.current_term
     follower.member <= member
-    #follower.commit_index <= commit_index
-    #commit_index <+ follower.commit_index
+    follower.commit_index <= commit_index
+    commit_index <+ follower.commit_index
+    server_type <= follower.server_type
   end
   
   bloom :candidate do
     c <= server_type do |s|
-      s if s.first == CANDIDATE
+      s if s.first == NodeProtocol::CANDIDATE
     end
     candidate.sndRequestVote <~ (c * sndRequestVote).rights
     rspRequestVote <~ (c * candidate.rspRequestVote).rights
@@ -61,13 +60,15 @@ module Node
     candidate.current_term <= current_term
     current_term <+ candidate.current_term
     candidate.member <= member
-    #candidate.commit_index <= commit_index
-    #commit_index <+ candidate.commit_index
+    candidate.commit_index <= commit_index
+    commit_index <+ candidate.commit_index
+    server_type <= candidate.server_type
+    sndRequestVote <~ candidate.sndRequestVote
   end
   
   bloom :leader do
     l <= server_type do |s|
-      s if s.first == LEADER
+      s if s.first == NodeProtocol::LEADER
     end
     leader.sndRequestVote <~ (l * sndRequestVote).rights
     rspRequestVote <~ (l * leader.rspRequestVote).rights
@@ -80,5 +81,6 @@ module Node
     leader.member <= member
     leader.commit_index <= commit_index
     commit_index <+ leader.commit_index
+    server_type <= leader.server_type
   end
 end

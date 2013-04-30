@@ -13,25 +13,46 @@ module Follower
     table :log, [:index] => [:term, :command]
     table :current_term, [] => [:term]
     table :voted_for, [] => [:term]
-    scratch :valid_vote, [] => [:term]
-    scratch :tester, [:term, :a, :b, :c]
+    table :commit_index, [] => [:index]
+    scratch :server_type, [] => [:state]
+    scratch :max_index, [] => [:index]
+    scratch :candidate_valid_vote, sndRequestVote.schema
+    scratch :pos_votes, sndRequestVote.schema
+    scratch :valid_vote, sndRequestVote.schema
+  end
+  
+  bootstrap do
+    current_term <= [[0]]
   end
   
   bloom :leader_election do
-    current_term <+ sndRequestVote do |s|
-      p current_term
-      p "-----"
-      #[s.term] if s.term > current_term.first
+    max_index <= log.argmax([:index], :index)
+    pos_votes <= sndRequestVote do |s|
+      if s.term > firsty(current_term)
+        if log.empty? or s.last_term > log[max_index.first].term
+          s
+        elsif s.last_term == log[max_index.first].term and s.last_index >= max_index.first
+          s
+        end
+      end
     end
-    voted_for <= sndRequestVote do |s|
-      p current_term
-      p "-----"
-      #[s.term] if s.term > current_term.first
+    candidate_valid_vote <= pos_votes.argagg(:choose, [], :candidate)
+    valid_vote <= (candidate_valid_vote * pos_votes).rights(:candidate => :candidate)
+    current_term <+- valid_vote {|s| [s.term]}
+    rspRequestVote <~ valid_vote do |s|
+      [s.candidate, s.me, s.term, true]
     end
-    #first <= [SndRequestVote.reject {|s| s if s.term <= current_term.first}]
-    #tester <= (voted_for * first).rights do |s|
-    #  [s.candidate, s.me, s.term, true]
-    #end
+  end
+  
+  bloom :stdio do
+    #stdio <~ pos_votes {|p| [["Pos votes: #{p}"]]}
+    #stdio <~ candidate_valid_vote {|c| [["Cand valid votes: #{c}"]]}
+    stdio <~ valid_vote{|v| [["Valid votes: #{v}"]]}
+    #stdio <~ sndRequestVote {|s| [["Send Request Vote: #{s}"]]}
+  end
+  
+  def firsty(something)
+    something.first.first
   end
   
 end
