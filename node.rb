@@ -20,7 +20,7 @@ module Node
     scratch :f, server_type.schema #Follower 
     scratch :c, server_type.schema #Candidate 
     scratch :l, server_type.schema #Leader 
-    scratch :ringing, [] => [:blah]
+    scratch :not_ringing, [] => [:blah]
     table :log, [:index] => [:term, :command]
     table :current_term, [] => [:term]
     table :commit_index, [] => [:index]
@@ -31,7 +31,7 @@ module Node
   end
   
   bloom :election_timeout do
-    ringing <= server_type do 
+    not_ringing <= server_type do 
       ring.empty? ? [" "] : [] #Independent Party
     end
   end
@@ -40,7 +40,7 @@ module Node
     f <= server_type do |s|
       s if s.first == NodeProtocol::FOLLOWER
     end
-    follower.sndRequestVote <~ (ringing * f * sndRequestVote).rights
+    follower.sndRequestVote <~ (not_ringing * f * sndRequestVote).rights
     rspRequestVote <~ (f * follower.rspRequestVote).rights
     follower.sndAppendEntries <~ (f * sndAppendEntries).rights
     rspAppendEntries <~ (f * follower.rspAppendEntries).rights
@@ -51,14 +51,16 @@ module Node
     follower.member <= member
     follower.commit_index <= commit_index
     commit_index <+ follower.commit_index
-    server_type <= follower.server_type
+    server_type <+ not_ringing do #TODO: may be wrong? maybe not?
+      [NodeProtocol::CANDIDATE]
+    end
   end
   
   bloom :candidate do
     c <= server_type do |s|
       s if s.first == NodeProtocol::CANDIDATE
     end
-    candidate.sndRequestVote <~ (ringing * c * sndRequestVote).rights
+    candidate.sndRequestVote <~ (not_ringing * c * sndRequestVote).rights
     rspRequestVote <~ (c * candidate.rspRequestVote).rights
     candidate.sndAppendEntries <~ (c * sndAppendEntries).rights
     rspAppendEntries <~ (c * candidate.rspAppendEntries).rights
@@ -71,6 +73,7 @@ module Node
     commit_index <+ candidate.commit_index
     server_type <= candidate.server_type
     sndRequestVote <~ candidate.sndRequestVote
+    candidate.ring <= ring
   end
   
   bloom :leader do

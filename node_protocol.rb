@@ -7,9 +7,9 @@ module NodeProtocol
   LEADER = 3
   
   state do
-    channel   :sndRequestVote, [:candidate, :@me, :term, :last_index, :last_term] 
-    channel   :rspRequestVote, [:@candidate, :me, :term, :granted]
-    channel   :sndAppendEntries, [:leader, :@me, :term, :prev_index, :prev_term, :entry, :commit_index]
-    channel   :rspAppendEntries, [:@leader, :me, :term, :success]
+    channel   :sndRequestVote, [:candidate, :@voter, :term, :last_index, :last_term] 
+    channel   :rspRequestVote, [:@candidate, :voter, :term, :granted]
+    channel   :sndAppendEntries, [:leader, :@follower, :term, :prev_index, :prev_term, :entry, :commit_index]
+    channel   :rspAppendEntries, [:@leader, :follower, :term, :success]
   end
 end

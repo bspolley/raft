@@ -1,15 +1,12 @@
 require 'rubygems'
 require 'bud'
 require 'node_protocol'
-#channel   :SndRequestVote, [:candidate, :@me, :term, :last_index, :last_term] 
-#channel   :RspRequestVote, [:@candidate, :me, :term, :granted]
-#channel   :SndAppendEntries, [:leader, :@me, :term, :prev_index, :prev_term, :entry, :commit_index]
-#channel   :RspAppendEntries, [:@leader, :me, :term, :success]
+
 module Follower
   include NodeProtocol
   
   state do
-    table :member, [:ident] => [:host]
+    scratch :member, [:ident] => [:host]
     table :log, [:index] => [:term, :command]
     table :current_term, [] => [:term]
     table :voted_for, [] => [:term]
@@ -40,7 +37,7 @@ module Follower
     valid_vote <= (candidate_valid_vote * pos_votes).rights(:candidate => :candidate)
     current_term <+- valid_vote {|s| [s.term]}
     rspRequestVote <~ valid_vote do |s|
-      [s.candidate, s.me, s.term, true]
+      [s.candidate, s.voter, s.term, true]
     end
   end
   
