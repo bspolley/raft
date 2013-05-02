@@ -7,10 +7,10 @@ require 'candidate'
 require 'leader'
   
 module Node
-
   include NodeProtocol
   include StaticMembership
-
+  include RandomTimer
+  
   import Follower => :follower
   import Candidate => :candidate
   import Leader => :leader
@@ -20,6 +20,7 @@ module Node
     scratch :f, server_type.schema #Follower 
     scratch :c, server_type.schema #Candidate 
     scratch :l, server_type.schema #Leader 
+    scratch :ringing, [] => [:blah]
     table :log, [:index] => [:term, :command]
     table :current_term, [] => [:term]
     table :commit_index, [] => [:index]
@@ -29,11 +30,17 @@ module Node
     current_term <= [[0]]
   end
   
+  bloom :election_timeout do
+    ringing <= server_type do 
+      ring.empty? ? [" "] : [] #Independent Party
+    end
+  end
+  
   bloom :follower do
     f <= server_type do |s|
       s if s.first == NodeProtocol::FOLLOWER
     end
-    follower.sndRequestVote <~ (f * sndRequestVote).rights
+    follower.sndRequestVote <~ (ringing * f * sndRequestVote).rights
     rspRequestVote <~ (f * follower.rspRequestVote).rights
     follower.sndAppendEntries <~ (f * sndAppendEntries).rights
     rspAppendEntries <~ (f * follower.rspAppendEntries).rights
@@ -51,7 +58,7 @@ module Node
     c <= server_type do |s|
       s if s.first == NodeProtocol::CANDIDATE
     end
-    candidate.sndRequestVote <~ (c * sndRequestVote).rights
+    candidate.sndRequestVote <~ (ringing * c * sndRequestVote).rights
     rspRequestVote <~ (c * candidate.rspRequestVote).rights
     candidate.sndAppendEntries <~ (c * sndAppendEntries).rights
     rspAppendEntries <~ (c * candidate.rspAppendEntries).rights
