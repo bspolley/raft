@@ -1,12 +1,12 @@
 require 'rubygems'
 require 'bud'
 require 'test/unit'
-require 'progress_timer'
+require 'random_timer'
 
 class TestTimer < Test::Unit::TestCase
   class Timer
     include Bud
-    include ProgressTimer
+    include RandomTimer
   end
   
   
@@ -16,8 +16,11 @@ class TestTimer < Test::Unit::TestCase
   end
   
   def test_rowo
-    @p1.set_alarm <+ [["test", 1]]
-    @p1.del_alarm <+ [["test"]]
+    @p1.tick
+    @p1.tick
+    @p1.tick
+    @p1.tick
+    @p1.tick
     sleep(5)
   end
   

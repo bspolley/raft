@@ -26,13 +26,11 @@ module ProgressTimer
     temp :cyc <= (alrm_buf * timer)
     timer_state <= cyc.map {|s, t| [s.name, t.val.to_f, s.time_out]}
     alrm_buf <- cyc.map{|s, t| s}
-
     alarm <= (timer_state * timer).map do |s, t|
       if t.val.to_f - s.start_tm > s.time_out
         [s.name, s.time_out]
       end
     end
-
     timer_state <- (timer_state * alarm).lefts(:name => :name)
     timer_state <- (timer_state * del_alarm).lefts(:name => :name)
   end
