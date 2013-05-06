@@ -44,8 +44,9 @@ module Follower
   bloom :stdio do
     #stdio <~ pos_votes {|p| [["Pos votes: #{p}"]]}
     #stdio <~ candidate_valid_vote {|c| [["Cand valid votes: #{c}"]]}
-    stdio <~ valid_vote{|v| [["Valid votes: #{v}"]]}
+    #stdio <~ valid_vote{|v| [["Valid votes: #{v}"]]}
     #stdio <~ sndRequestVote {|s| [["Send Request Vote: #{s}"]]}
+    #stdio <~ rspRequestVote {|s| [["Response Request Vote: #{s}"]]}
   end
   
   def firsty(something)

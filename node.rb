@@ -51,7 +51,7 @@ module Node
     follower.member <= member
     follower.commit_index <= commit_index
     commit_index <+ follower.commit_index
-    server_type <+ not_ringing do #TODO: may be wrong? maybe not?
+    server_type <+- not_ringing do #TODO: may be wrong? maybe not?
       [NodeProtocol::CANDIDATE]
     end
   end
@@ -71,7 +71,7 @@ module Node
     candidate.member <= member
     candidate.commit_index <= commit_index
     commit_index <+ candidate.commit_index
-    server_type <= candidate.server_type
+    server_type <+- candidate.server_type
     sndRequestVote <~ candidate.sndRequestVote
     candidate.ring <= ring
   end
