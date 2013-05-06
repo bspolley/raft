@@ -62,6 +62,32 @@ class TestFollower < Test::Unit::TestCase
     end
   end
   
+  def test_multiple_req_mult_candidate
+    @follower.sync_do { @follower.current_term <+- [[2]]}
+    @follower.sync_do { @follower.sndRequestVote <~ [['localhost:12346', 'localhost:12345', 1, 2, 1], ['localhost:12347', 'localhost:12345', 3, 2, 2]] }
+    4.times { @follower.sync_do }
+    @follower.sync_do do
+      assert_equal(1, @follower.validVote.length)
+      @follower.validVote.each do |f|
+        assert_equal('localhost:12347', f.candidate)
+        assert_equal(3, f.term)
+      end
+    end
+  end
+  
+  def test_multiple_req_same_candidate
+    @follower.sync_do { @follower.current_term <+- [[2]]}
+    @follower.sync_do { @follower.sndRequestVote <~ [['localhost:12346', 'localhost:12345', 1, 2, 1], ['localhost:12346', 'localhost:12345', 3, 2, 2]] }
+    4.times { @follower.sync_do }
+    @follower.sync_do do
+      assert_equal(1, @follower.validVote.length)
+      @follower.validVote.each do |f|
+        assert_equal('localhost:12346', f.candidate)
+        assert_equal(3, f.term)
+      end
+    end
+  end
+  
 end
 
 =begin
