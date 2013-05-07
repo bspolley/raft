@@ -1,9 +1,9 @@
 require 'rubygems'
 require 'bud'
-require 'node_protocol'
+require 'inner_node_protocol'
 
 module Follower
-  include NodeProtocol
+  include InnerNodeProtocol
   
   state do
     scratch :member, [:ident] => [:host]
@@ -13,9 +13,9 @@ module Follower
     table :commit_index, [] => [:index]
     scratch :server_type, [] => [:state]
     scratch :max_index, [] => [:index]
-    scratch :candidate_valid_vote, sndRequestVote.schema
-    scratch :pos_votes, sndRequestVote.schema
-    scratch :valid_vote, sndRequestVote.schema
+    scratch :candidate_valid_vote, inputSndRequestVote.schema
+    scratch :pos_votes, inputSndRequestVote.schema
+    scratch :valid_vote, inputSndRequestVote.schema
     scratch :max_log_term, [] => [:term]
   end
   
@@ -28,11 +28,9 @@ module Follower
       [l.index]
     end
     max_log_term <= (log * max_index).lefts do |l|
-      if max_index and l.index == firsty(max_index)
-        [l.term ]
-      end
+      [l.term ] if l.index == firsty(max_index)
     end
-    pos_votes <= sndRequestVote do |s|
+    pos_votes <= inputSndRequestVote do |s|
       if s.term > firsty(current_term)
         if log.empty? or s.last_term > firsty(max_log_term)
           s
@@ -44,7 +42,7 @@ module Follower
     candidate_valid_vote <= pos_votes.argagg(:choose, [], :candidate)
     valid_vote <= (candidate_valid_vote * pos_votes).rights(:candidate => :candidate)
     current_term <+- valid_vote {|s| [s.term]}
-    rspRequestVote <~ valid_vote do |s|
+    outputRspRequestVote <= valid_vote do |s|
       [s.candidate, s.voter, s.term, true]
     end
   end

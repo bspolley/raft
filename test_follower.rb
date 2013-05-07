@@ -9,11 +9,11 @@ class TestFollower < Test::Unit::TestCase
     include Follower  
     
     state do
-      table :validVote, sndRequestVote.schema
+      table :see_output_rsp_req, outputRspRequestVote.schema
     end
     
     bloom do
-      validVote <= valid_vote
+      see_output_rsp_req <= outputRspRequestVote
     end
   end
   
@@ -27,11 +27,11 @@ class TestFollower < Test::Unit::TestCase
   end
   
   def test_one_request
-    @follower.sync_do { @follower.sndRequestVote <~ [['localhost:12346', 'localhost:12345', 1, 2, 3]] }
+    @follower.sync_do { @follower.inputSndRequestVote <+ [['localhost:12346', 'localhost:12345', 1, 2, 3]] }
     4.times { @follower.sync_do }
     @follower.sync_do do
-      assert_equal(1, @follower.validVote.length)
-      @follower.validVote.each do |f|
+      assert_equal(1, @follower.see_output_rsp_req.length)
+      @follower.see_output_rsp_req.each do |f|
         assert_equal('localhost:12346', f.candidate)
         assert_equal(1, f.term)
       end
@@ -41,20 +41,20 @@ class TestFollower < Test::Unit::TestCase
   def test_grant_none_if_less_term
     @follower.sync_do { @follower.current_term <+- [[3]] }
     4.times { @follower.sync_do }
-    @follower.sync_do { @follower.sndRequestVote <~ [['localhost:12346', 'localhost:12345', 2, 2, 1]] }
+    @follower.sync_do { @follower.inputSndRequestVote <+ [['localhost:12346', 'localhost:12345', 2, 2, 1]] }
     4.times { @follower.sync_do }
     @follower.sync_do do
-      assert_equal(0, @follower.validVote.length)
+      assert_equal(0, @follower.see_output_rsp_req.length)
     end
   end
   
   def test_grant_none_if_equal_term
     @follower.sync_do { @follower.current_term <+- [[3]] }
     4.times { @follower.sync_do }
-    @follower.sync_do { @follower.sndRequestVote <~ [['localhost:12346', 'localhost:12345', 3, 2, 1]] }
+    @follower.sync_do { @follower.inputSndRequestVote <+ [['localhost:12346', 'localhost:12345', 3, 2, 1]] }
     4.times { @follower.sync_do }
     @follower.sync_do do
-      assert_equal(0, @follower.validVote.length)
+      assert_equal(0, @follower.see_output_rsp_req.length)
     end
   end
   
@@ -62,10 +62,10 @@ class TestFollower < Test::Unit::TestCase
     @follower.sync_do { @follower.current_term <+- [[3]] }
     @follower.sync_do { @follower.log <+ [[0, 1, 'a'], [1, 2, 'a']]}
     4.times { @follower.sync_do }
-    @follower.sync_do { @follower.sndRequestVote <~ [['localhost:12346', 'localhost:12345', 4, 2, 1]] }
+    @follower.sync_do { @follower.inputSndRequestVote <+ [['localhost:12346', 'localhost:12345', 4, 2, 1]] }
     4.times { @follower.sync_do }
     @follower.sync_do do
-      assert_equal(0, @follower.validVote.length)
+      assert_equal(0, @follower.see_output_rsp_req.length)
     end
   end
   
@@ -73,10 +73,10 @@ class TestFollower < Test::Unit::TestCase
     @follower.sync_do { @follower.current_term <+- [[3]] }
     @follower.sync_do { @follower.log <+ [[0, 1, 'a'], [1, 2, 'a']]}
     4.times { @follower.sync_do }
-    @follower.sync_do { @follower.sndRequestVote <~ [['localhost:12346', 'localhost:12345', 4, 2, 3]] }
+    @follower.sync_do { @follower.inputSndRequestVote <+ [['localhost:12346', 'localhost:12345', 4, 2, 3]] }
     4.times { @follower.sync_do }
     @follower.sync_do do
-      assert_equal(1, @follower.validVote.length)
+      assert_equal(1, @follower.see_output_rsp_req.length)
     end
   end
   
@@ -84,10 +84,10 @@ class TestFollower < Test::Unit::TestCase
     @follower.sync_do { @follower.current_term <+- [[3]] }
     @follower.sync_do { @follower.log <+ [[0, 1, 'a'], [1, 2, 'a']]}
     4.times { @follower.sync_do }
-    @follower.sync_do { @follower.sndRequestVote <~ [['localhost:12346', 'localhost:12345', 4, 2, 2]] }
+    @follower.sync_do { @follower.inputSndRequestVote <+ [['localhost:12346', 'localhost:12345', 4, 2, 2]] }
     4.times { @follower.sync_do }
     @follower.sync_do do
-      assert_equal(1, @follower.validVote.length)
+      assert_equal(1, @follower.see_output_rsp_req.length)
     end
   end
   
@@ -95,10 +95,10 @@ class TestFollower < Test::Unit::TestCase
     @follower.sync_do { @follower.current_term <+- [[3]] }
     @follower.sync_do { @follower.log <+ [[0, 1, 'a'], [1, 2, 'a'], [2, 2, 'b']]}
     4.times { @follower.sync_do }
-    @follower.sync_do { @follower.sndRequestVote <~ [['localhost:12346', 'localhost:12345', 4, 1, 2]] }
+    @follower.sync_do { @follower.inputSndRequestVote <+ [['localhost:12346', 'localhost:12345', 4, 1, 2]] }
     4.times { @follower.sync_do }
     @follower.sync_do do
-      assert_equal(0, @follower.validVote.length)
+      assert_equal(0, @follower.see_output_rsp_req.length)
     end
   end
   
@@ -106,21 +106,21 @@ class TestFollower < Test::Unit::TestCase
     @follower.sync_do { @follower.current_term <+- [[3]] }
     @follower.sync_do { @follower.log <+ [[0, 1, 'a'], [1, 2, 'a'], [2, 2, 'b']]}
     4.times { @follower.sync_do }
-    @follower.sync_do { @follower.sndRequestVote <~ [['localhost:12346', 'localhost:12345', 4, 3, 2]] }
+    @follower.sync_do { @follower.inputSndRequestVote <+ [['localhost:12346', 'localhost:12345', 4, 3, 2]] }
     4.times { @follower.sync_do }
     @follower.sync_do do
-      assert_equal(1, @follower.validVote.length)
+      assert_equal(1, @follower.see_output_rsp_req.length)
     end
   end
   
   def test_multiple_req_mult_candidate
     @follower.sync_do { @follower.current_term <+- [[2]]}
-    @follower.sync_do { @follower.sndRequestVote <~ [ ['localhost:12346', 'localhost:12345', 1, 2, 1], 
+    @follower.sync_do { @follower.inputSndRequestVote <+ [ ['localhost:12346', 'localhost:12345', 1, 2, 1], 
                                                       ['localhost:12347', 'localhost:12345', 3, 2, 2]] }
     4.times { @follower.sync_do }
     @follower.sync_do do
-      assert_equal(1, @follower.validVote.length)
-      @follower.validVote.each do |f|
+      assert_equal(1, @follower.see_output_rsp_req.length)
+      @follower.see_output_rsp_req.each do |f|
         assert_equal('localhost:12347', f.candidate)
         assert_equal(3, f.term)
       end
@@ -129,12 +129,12 @@ class TestFollower < Test::Unit::TestCase
   
   def test_multiple_req_same_candidate
     @follower.sync_do { @follower.current_term <+- [[2]]}
-    @follower.sync_do { @follower.sndRequestVote <~ [ ['localhost:12346', 'localhost:12345', 1, 2, 1], 
+    @follower.sync_do { @follower.inputSndRequestVote <+ [ ['localhost:12346', 'localhost:12345', 1, 2, 1], 
                                                       ['localhost:12346', 'localhost:12345', 3, 2, 2]] }
     4.times { @follower.sync_do }
     @follower.sync_do do
-      assert_equal(1, @follower.validVote.length)
-      @follower.validVote.each do |f|
+      assert_equal(1, @follower.see_output_rsp_req.length)
+      @follower.see_output_rsp_req.each do |f|
         assert_equal('localhost:12346', f.candidate)
         assert_equal(3, f.term)
       end

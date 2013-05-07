@@ -40,10 +40,10 @@ module Node
     f <= server_type do |s|
       s if s.first == NodeProtocol::FOLLOWER
     end
-    follower.sndRequestVote <~ (not_ringing * f * sndRequestVote).rights
-    rspRequestVote <~ (f * follower.rspRequestVote).rights
-    follower.sndAppendEntries <~ (f * sndAppendEntries).rights
-    rspAppendEntries <~ (f * follower.rspAppendEntries).rights
+    follower.inputSndRequestVote <= (not_ringing * f * sndRequestVote).rights
+    rspRequestVote <~ (f * follower.outputRspRequestVote).rights
+    follower.inputSndAppendEntries <= (f * sndAppendEntries).rights
+    #rspAppendEntries <~ (f * follower.rspAppendEntries).rights
     follower.log <= log
     log <+ follower.log
     follower.current_term <= current_term
@@ -60,19 +60,19 @@ module Node
     c <= server_type do |s|
       s if s.first == NodeProtocol::CANDIDATE
     end
-    candidate.sndRequestVote <~ (not_ringing * c * sndRequestVote).rights
-    rspRequestVote <~ (c * candidate.rspRequestVote).rights
-    candidate.sndAppendEntries <~ (c * sndAppendEntries).rights
-    rspAppendEntries <~ (c * candidate.rspAppendEntries).rights
+    candidate.inputSndRequestVote <= (not_ringing * c * sndRequestVote).rights
+    candidate.inputRspRequestVote <= (not_ringing * c * rspRequestVote).rights
+    rspRequestVote <~ (c * candidate.outputRspRequestVote).rights
+    sndRequestVote <~ candidate.outputSndRequestVote
+    candidate.inputSndAppendEntries <~ (c * sndAppendEntries).rights
     candidate.log <= log
     log <+ candidate.log
     candidate.current_term <= current_term
-    current_term <+ candidate.current_term
+    current_term <+ candidate.next_current_term
     candidate.member <= member
     candidate.commit_index <= commit_index
     commit_index <+ candidate.commit_index
     server_type <+- candidate.server_type
-    sndRequestVote <~ candidate.sndRequestVote
     candidate.ring <= ring
   end
   
@@ -80,10 +80,10 @@ module Node
     l <= server_type do |s|
       s if s.first == NodeProtocol::LEADER
     end
-    leader.sndRequestVote <~ (l * sndRequestVote).rights
-    rspRequestVote <~ (l * leader.rspRequestVote).rights
-    leader.sndAppendEntries <~ (l * sndAppendEntries).rights
-    rspAppendEntries <~ (l * leader.rspAppendEntries).rights
+    leader.inputSndRequestVote <= (l * sndRequestVote).rights
+    leader.inputSndAppendEntries <= (l * sndAppendEntries).rights
+    sndAppendEntries <~ leader.outputSndAppendEntries
+    #rspAppendEntries <~ (l * leader.rspAppendEntries).rights
     leader.log <= log
     log <+ leader.log
     leader.current_term <= current_term
