@@ -1,8 +1,10 @@
 require 'rubygems'
 require 'bud'
+require 'node_protocol'
 require 'inner_node_protocol'
 
 module Follower
+  include NodeProtocol
   include InnerNodeProtocol
   
   state do

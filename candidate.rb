@@ -1,12 +1,14 @@
 require 'rubygems'
 require 'bud'
 require 'node_protocol'
+require 'inner_node_protocol'
 #channel   :SndRequestVote, [:candidate, :@voter, :term, :last_index, :last_term] 
 #channel   :RspRequestVote, [:@candidate, :voter, :term, :granted]
 #channel   :SndAppendEntries, [:leader, :@follower, :term, :prev_index, :prev_term, :entry, :commit_index]
 #channel   :RspAppendEntries, [:@leader, :follower, :term, :success]
 module Candidate
   include NodeProtocol
+  include InnerNodeProtocol
   
   state do
     scratch :member, [:ident] => [:host]
@@ -14,7 +16,7 @@ module Candidate
     table :current_term, [] => [:term]
     table :commit_index, [] => [:index]
     scratch :server_type, [] => [:state]
-    scratch :better_candidate, [] => sndRequestVote.schema
+    scratch :better_candidate, [] => inputSndRequestVote.schema
     scratch :ring, [:name, :time_out]
     periodic :timer, 0.02
     table :votes, [:client]
@@ -40,7 +42,7 @@ module Candidate
   end
   
   bloom :leader_election do
-    better_candidate <= sndRequestVote do |s|
+    better_candidate <= inputSndRequestVote do |s|
       s if s.term > firsty(current_term)
     end
     is_follower <= better_candidate.argagg(:choose, [], :candidate) do |p|
@@ -52,10 +54,10 @@ module Candidate
     log_max_term <= (log * max_index).lefts do |l|
       [l.term] if l.index == firsty(max_index)
     end
-    sndRequestVote <~ (timer * member).rights do |m|
+    outputSndRequestVote <= (timer * member).rights do |m|
       [m.host, ip_port, current_term, firsty(max_index), log_max_term]
     end
-    votes <= rspRequestVote do |r|
+    votes <= inputRspRequestVote do |r|
       [r.voter] 
     end
     is_leader <= votes.group([], count(:client)) do |v|
@@ -71,7 +73,7 @@ module Candidate
   
   bloom :stdio do 
     #stdio <~ server_type {|s| [["Server type: #{s}"]]}
-    #stdio <~ sndRequestVote {|s| [["Send Request Vote: #{s}"]]}
+    #stdio <~ inputSndRequestVote {|s| [["Send Request Vote: #{s}"]]}
     #stdio <~ better_candidate {|b| [["Better candidate: #{b}"]]}
     #stdio <~ is_follower {|f| [["Is follower: #{f}"]]}
     #stdio <~ current_term {|c| [["Current term: #{c}"]]}

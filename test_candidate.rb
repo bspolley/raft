@@ -36,7 +36,7 @@ class TestCandidate < Test::Unit::TestCase
   def test_higher_opponent
     @candidate.current_term <+- [[42]]
     4.times { pseudo_tick(42) }
-    @candidate.sndRequestVote <~ [['localhost:12347', 'localhost:12345', 43, 2, 3]]
+    @candidate.inputSndRequestVote <+ [['localhost:12347', 'localhost:12345', 43, 2, 3]]
     4.times { pseudo_tick(42) }
     @candidate.sync_do do
       assert_equal(NodeProtocol::FOLLOWER, @candidate.see_server_type.first.state)
@@ -46,7 +46,7 @@ class TestCandidate < Test::Unit::TestCase
   def test_lower_opponent
     @candidate.current_term <+- [[42]]
     4.times { pseudo_tick(42) }
-    @candidate.sndRequestVote <~ [['localhost:12347', 'localhost:12345', 1, 2, 3]]
+    @candidate.inputSndRequestVote <+ [['localhost:12347', 'localhost:12345', 1, 2, 3]]
     4.times { pseudo_tick(42) }
     @candidate.sync_do do
       assert_equal(0, @candidate.see_server_type.length)
@@ -56,7 +56,7 @@ class TestCandidate < Test::Unit::TestCase
   def test_equal_opponent
     @candidate.current_term <+- [[42]]
     4.times { pseudo_tick(42) }
-    @candidate.sndRequestVote <~ [['localhost:12347', 'localhost:12345', 1, 2, 3]]
+    @candidate.inputSndRequestVote <+ [['localhost:12347', 'localhost:12345', 1, 2, 3]]
     4.times { pseudo_tick(42) }
     @candidate.sync_do do
       assert_equal(0, @candidate.see_server_type.length)
