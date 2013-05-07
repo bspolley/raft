@@ -16,6 +16,7 @@ module Follower
     scratch :candidate_valid_vote, sndRequestVote.schema
     scratch :pos_votes, sndRequestVote.schema
     scratch :valid_vote, sndRequestVote.schema
+    scratch :max_log_term, [] => [:term]
   end
   
   bootstrap do
@@ -23,12 +24,19 @@ module Follower
   end
   
   bloom :leader_election do
-    max_index <= log.argmax([:index], :index)
+    max_index <= log.argmax([], :index) do |l|
+      [l.index]
+    end
+    max_log_term <= (log * max_index).lefts do |l|
+      if max_index and l.index == firsty(max_index)
+        [l.term ]
+      end
+    end
     pos_votes <= sndRequestVote do |s|
       if s.term > firsty(current_term)
-        if log.empty? or s.last_term > log[max_index.first].term
+        if log.empty? or s.last_term > firsty(max_log_term)
           s
-        elsif s.last_term == log[max_index.first].term and s.last_index >= max_index.first
+        elsif s.last_term == firsty(max_log_term) and s.last_index >= firsty(max_index)
           s
         end
       end
