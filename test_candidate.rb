@@ -11,16 +11,24 @@ class TestCandidate < Test::Unit::TestCase
     state do
       table :see_server_type, [] => [:state]
       table :see_next_current_term, [] => [:state]
+      scratch :see_current_term, [] => [:term]
     end
     
     bloom do
       see_server_type <+- server_type
       see_next_current_term <+- next_current_term
+      member <= [ [1, 'localhost:23451'], [2, 'localhost:23452'],
+                  [3, 'localhost:23453'], [4, 'localhost:23454'],
+                  [5, 'localhost:12345']]
+      current_term <= see_current_term
     end
   end
   
   def pseudo_tick(tick)
-    @candidate.current_term <+- [[tick]]
+    #@candidate.member <+ [[1, 'localhost:23451'], [2, 'localhost:23452'], 
+    #                      [3, 'localhost:23453'], [4, 'localhost:23454'],
+    #                      [5, 'localhost:12345']]
+    @candidate.current_term <+ [[tick]]
     @candidate.tick
   end 
 
@@ -77,13 +85,28 @@ class TestCandidate < Test::Unit::TestCase
   def test_elected_leader
     @candidate.current_term <+- [[42]]
     4.times { pseudo_tick(42) }
-    @candidate.ring <+ [["RINGED", "OMG"]]
-    sleep(0.5) #ensure 300 ms has passed
-    4.times { pseudo_tick(42)}
+    @candidate.async_do {
+      @candidate.inputRspRequestVote <+ [ ['localhost:12345', 'localhost:23451', 42, 'true'],
+                                          ['localhost:12345', 'localhost:23454', 42, 'true']]
+    }
+    #@candidate.ring <+ [["RINGED", "OMG"]]
+    #sleep(0.5) #ensure 300 ms has passed
+    4.times { pseudo_tick(42) }
     @candidate.sync_do do
-      assert_equal(1, @candidate.see_next_current_term.length)
+      assert_equal(NodeProtocol::LEADER, @candidate.see_server_type.first.state)
     end
   end
   
+  def test_election_no_result_yet
+    @candidate.current_term <+- [[42]]
+    4.times { pseudo_tick(42) }
+    @candidate.inputRspRequestVote <+ [ ['localhost:12345', 'localhost:23451', 42, 'true'] ]
+    #@candidate.ring <+ [["RINGED", "OMG"]]
+    #sleep(0.5) #ensure 300 ms has passed
+    4000.times { pseudo_tick(42) }
+    @candidate.sync_do do
+      assert_equal(0, @candidate.see_server_type.length)
+    end
+  end
   
 end

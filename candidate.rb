@@ -26,6 +26,8 @@ module Candidate
     scratch :is_leader, [] => [:state]
     scratch :tmp_server_type, [:state]
     scratch :next_current_term, [] => [:term]
+    scratch :tmp_max_index, [] => [:index]
+    scratch :tmp_log_max_term, [] => [:index]
   end
   
   bootstrap do
@@ -51,17 +53,20 @@ module Candidate
     max_index <= log.argmax([], :index) do |l|
       [l.index]
     end
-    log_max_term <= (log * max_index).lefts do |l|
-      [l.term] if l.index == firsty(max_index)
+    #max_index <= current_term do
+    #  tmp_max_index.empty? ? [0] : firsty(tmp_max_index)  #TODO: Do we want to have max_index nil or 0 when log empty?
+    #end
+    log_max_term <= log.argmax([], :index) do |l|
+      [l.term] 
     end
     outputSndRequestVote <= (timer * member).rights do |m|
-      [m.host, ip_port, current_term, firsty(max_index), log_max_term]
+      [m.host, ip_port, current_term, firsty(max_index), firsty(log_max_term)]
     end
     votes <= inputRspRequestVote do |r|
       [r.voter] 
     end
     is_leader <= votes.group([], count(:client)) do |v|
-      [NodeProtocol::LEADER] if v.first > member.count/2.0
+      [NodeProtocol::LEADER] if (v.first + 1) > member.count/2.0 # +1 voting for self
     end
     tmp_server_type <= is_follower
     tmp_server_type <= is_leader
@@ -76,15 +81,17 @@ module Candidate
     #stdio <~ inputSndRequestVote {|s| [["Send Request Vote: #{s}"]]}
     #stdio <~ better_candidate {|b| [["Better candidate: #{b}"]]}
     #stdio <~ is_follower {|f| [["Is follower: #{f}"]]}
+    #stdio <~ tmp_server_type {|t| [["TMP Server Type: #{t}"]]}
     #stdio <~ current_term {|c| [["Current term: #{c}"]]}
     #stdio <~ ring {|c| [["RING!!!"]]}
     #stdio <~ next_current_term {|c| [["Next current term: #{c}"]]}
     #stdio <~ better_candidate {|s| [["Better Candidate: #{s}"]]}
+    #stdio <~ [["MEMBER: #{member.count}"]]
     
   end
   
   def firsty(something)
-    something.first.first
+    something.first.first if something and something.first
   end
   
 end
