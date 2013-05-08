@@ -48,7 +48,6 @@ module Node
     log <+ follower.add_log
     log <- follower.del_log
     follower.current_term <= current_term
-    current_term <+ follower.current_term
     follower.member <= member
     follower.commit_index <= commit_index
     commit_index <+ follower.commit_index

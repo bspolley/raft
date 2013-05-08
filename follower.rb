@@ -24,7 +24,7 @@ module Follower
   bootstrap do
     current_term <= [[0]]
   end
-  
+  #TODO: reset timer if get heartbeat from LEADER
   bloom :leader_election do
     max_index <= log.argmax([], :index) do |l|
       [l.index]

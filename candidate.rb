@@ -37,13 +37,13 @@ module Candidate
     votes <- (better_candidate * votes).rights
     votes <- (ring * votes).rights
     votes <- (server_type * votes).pairs do |s, v|
-      v if firsty(server_type) == NodeProtocol::LEADER
+      v if server_type.first.first == NodeProtocol::LEADER
     end
   end
-  
+  #TODO: step down if get hearbeat from Leader if >= term
   bloom :leader_election do
     better_candidate <= inputSndRequestVote do |s|
-      s if s.term > firsty(current_term)
+      s if s.term > current_term.first.first
     end
     is_follower <= better_candidate.argagg(:choose, [], :candidate) do |p|
       [NodeProtocol::FOLLOWER]
@@ -67,7 +67,7 @@ module Candidate
     tmp_server_type <= is_leader
     server_type <= tmp_server_type.argmin([], :state)
     next_current_term <= ring do
-      [firsty(current_term) + 1] if server_type.empty?
+      [current_term.first.first + 1] if server_type.empty?
     end
   end
   
@@ -86,10 +86,6 @@ module Candidate
     #stdio <~ timer {|t| [["Timer: #{t}"]]}
     #stdio <~ log {|l| [["LOG: #{l}"]]}
     
-  end
-  
-  def firsty(something)
-    something.first.first
   end
   
 end
