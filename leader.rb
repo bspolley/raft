@@ -37,7 +37,7 @@ module Leader
       [l.index]
     end
     log_max <= (log * max_index).lefts do |l|
-      [l.index, l.term, l.command] if l.index == max_index.first.first
+      [l.index, l.term, l.command] if l.index == max_index.first.first #entry and command same thing
     end
     # channel   :sndAppendEntries, [:leader, :@follower, :term, :prev_index, :prev_term, :entry, :commit_index]
     outputSndAppendEntries <= (heartbeat * member).rights do |m|
@@ -45,6 +45,9 @@ module Leader
     end
   end
   
+  bloom :stdio do
+    #stdio <~ log_max {|l| [["LOG MAX: #{l}"]]}
+  end
   
 
 end
