@@ -11,7 +11,7 @@ class TestCandidate < Test::Unit::TestCase
     state do
       table :see_server_type, [] => [:state]
       table :see_next_current_term, [] => [:state]
-      scratch :see_current_term, [] => [:term]
+      #scratch :see_current_term, [] => [:term]
     end
     
     bloom do
@@ -20,14 +20,11 @@ class TestCandidate < Test::Unit::TestCase
       member <= [ [1, 'localhost:23451'], [2, 'localhost:23452'],
                   [3, 'localhost:23453'], [4, 'localhost:23454'],
                   [5, 'localhost:12345']]
-      current_term <= see_current_term
+      #current_term <= see_current_term
     end
   end
   
   def pseudo_tick(tick)
-    #@candidate.member <+ [[1, 'localhost:23451'], [2, 'localhost:23452'], 
-    #                      [3, 'localhost:23453'], [4, 'localhost:23454'],
-    #                      [5, 'localhost:12345']]
     @candidate.current_term <+ [[tick]]
     @candidate.tick
   end 
@@ -102,8 +99,8 @@ class TestCandidate < Test::Unit::TestCase
     4.times { pseudo_tick(42) }
     @candidate.inputRspRequestVote <+ [ ['localhost:12345', 'localhost:23451', 42, 'true'] ]
     #@candidate.ring <+ [["RINGED", "OMG"]]
-    #sleep(0.5) #ensure 300 ms has passed
-    4000.times { pseudo_tick(42) }
+    sleep(0.5) #ensure 300 ms has passed
+    4.times { pseudo_tick(42) }
     @candidate.sync_do do
       assert_equal(0, @candidate.see_server_type.length)
     end
