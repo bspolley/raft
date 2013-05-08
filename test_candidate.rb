@@ -14,6 +14,10 @@ class TestCandidate < Test::Unit::TestCase
       #scratch :see_current_term, [] => [:term]
     end
     
+    bootstrap do
+      log <= [[0, 0, "dummy"]]
+    end
+    
     bloom do
       see_server_type <+- server_type
       see_next_current_term <+- next_current_term

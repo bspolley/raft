@@ -26,8 +26,8 @@ module Candidate
     scratch :is_leader, [] => [:state]
     scratch :tmp_server_type, [:state]
     scratch :next_current_term, [] => [:term]
-    scratch :tmp_max_index, [] => [:index]
-    scratch :tmp_log_max_term, [] => [:index]
+    #scratch :tmp_max_index, [] => [:index]
+    #scratch :tmp_log_max_term, [] => [:index]
   end
   
   bootstrap do
@@ -50,18 +50,18 @@ module Candidate
     is_follower <= better_candidate.argagg(:choose, [], :candidate) do |p|
       [NodeProtocol::FOLLOWER]
     end
-    tmp_max_index <= log.argmax([], :index) do |l|
+    max_index <= log.argmax([], :index) do |l|
       [l.index]
     end
-    max_index <= current_term do
-      tmp_max_index.empty? ? [0] : firsty(tmp_max_index)  #TODO: Do we want to have max_index nil or 0 when log empty?
-    end
-    tmp_log_max_term <= log.argmax([], :index) do |l|
+    #max_index <= current_term do
+    #  tmp_max_index.empty? ? [0] : firsty(tmp_max_index)  #TODO: Do we want to have max_index nil or 0 when log empty?
+    #end
+    log_max_term <= log.argmax([], :index) do |l|
       [l.term] 
     end
-    log_max_term <= current_term do
-      tmp_log_max_term.empty? ? [0] : firsty(tmp_log_max_term)
-    end
+    #log_max_term <= current_term do
+    #  tmp_log_max_term.empty? ? [0] : firsty(tmp_log_max_term)
+    #end
     outputSndRequestVote <= (timer * member).rights do |m|
       [m.host, ip_port, current_term, firsty(max_index), firsty(log_max_term)]
     end

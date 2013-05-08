@@ -45,7 +45,8 @@ module Node
     follower.inputSndAppendEntries <= (f * sndAppendEntries).rights
     #rspAppendEntries <~ (f * follower.rspAppendEntries).rights
     follower.log <= log
-    log <+ follower.log
+    log <+ follower.add_log
+    log <- follower.del_log
     follower.current_term <= current_term
     current_term <+ follower.current_term
     follower.member <= member
