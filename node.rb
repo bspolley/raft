@@ -75,6 +75,7 @@ module Node
     commit_index <+ candidate.commit_index
     server_type <+- candidate.server_type
     candidate.ring <= ring
+    reset <= follower.reset
   end
   
   bloom :leader do

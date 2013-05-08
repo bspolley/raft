@@ -2,10 +2,7 @@ require 'rubygems'
 require 'bud'
 require 'node_protocol'
 require 'inner_node_protocol'
-#channel   :SndRequestVote, [:candidate, :@voter, :term, :last_index, :last_term] 
-#channel   :RspRequestVote, [:@candidate, :voter, :term, :granted]
-#channel   :SndAppendEntries, [:leader, :@follower, :term, :prev_index, :prev_term, :entry, :commit_index]
-#channel   :RspAppendEntries, [:@leader, :follower, :term, :success]
+
 module Candidate
   include NodeProtocol
   include InnerNodeProtocol
@@ -26,6 +23,7 @@ module Candidate
     scratch :is_leader, [] => [:state]
     scratch :tmp_server_type, [:state]
     scratch :next_current_term, [] => [:term]
+    scratch :reset, [] => [:timer]
   end
   
   bootstrap do
@@ -74,6 +72,11 @@ module Candidate
   bloom :append_entries do
     is_follower <= inputSndAppendEntries do |a|
       [NodeProtocol::FOLLOWER] if a.term >= current_term.first.first
+    end
+    reset <= inputSndAppendEntries do |a|
+      if a.term >= current_term.first.first
+        ["RESET"]
+      end
     end
   end
   
