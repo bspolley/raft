@@ -110,4 +110,34 @@ class TestCandidate < Test::Unit::TestCase
     end
   end
   
+  def test_append_entry_greater_term_leader
+    @candidate.current_term <+- [[42]]
+    4.times { pseudo_tick(42) }
+    @candidate.inputSndAppendEntries <+ [['localhost:12345', 'localhoast:23451', 43, 3, 42, "entry", 3]]
+    4.times { pseudo_tick(42) }
+    @candidate.sync_do do
+      assert_equal(NodeProtocol::FOLLOWER, @candidate.see_server_type.first.state)
+    end
+  end
+  
+  def test_append_entry_less_term_leader
+    @candidate.current_term <+- [[42]]
+    4.times { pseudo_tick(42) }
+    @candidate.inputSndAppendEntries <+ [['localhost:12345', 'localhoast:23451', 41, 3, 42, "entry", 3]]
+    4.times { pseudo_tick(42) }
+    @candidate.sync_do do
+      assert_equal(0, @candidate.see_server_type.length)
+    end
+  end
+  
+  def test_append_entry_equal_term_leader
+    @candidate.current_term <+- [[42]]
+    4.times { pseudo_tick(42) }
+    @candidate.inputSndAppendEntries <+ [['localhost:12345', 'localhoast:23451', 42, 3, 41, "entry", 3]]
+    4.times { pseudo_tick(42) }
+    @candidate.sync_do do
+      assert_equal(NodeProtocol::FOLLOWER, @candidate.see_server_type.length)
+    end
+  end
+  
 end

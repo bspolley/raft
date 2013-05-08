@@ -71,6 +71,12 @@ module Candidate
     end
   end
   
+  bloom :append_entries do
+    is_follower <= inputSndAppendEntries do |a|
+      [NodeProtocol::FOLLOWER] if a.term >= current_term.first.first
+    end
+  end
+  
   bloom :stdio do 
     #stdio <~ server_type {|s| [["Server type: #{s}"]]}
     #stdio <~ inputSndRequestVote {|s| [["Send Request Vote: #{s}"]]}

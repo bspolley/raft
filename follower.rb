@@ -9,16 +9,22 @@ module Follower
   
   state do
     scratch :member, [:ident] => [:host]
-    table :log, [:index] => [:term, :command]
+    scratch :log, [:index] => [:term, :command]
+    scratch :log_add, [:index] => [:term, :command]
+    scratch :log_del, [:index] => [:term, :command]
     table :current_term, [] => [:term]
     table :voted_for, [] => [:term]
-    table :commit_index, [] => [:index]
+    scratch :commit_index, [] => [:index]
     scratch :server_type, [] => [:state]
     scratch :max_index, [] => [:index]
     scratch :candidate_valid_vote, inputSndRequestVote.schema
     scratch :pos_votes, inputSndRequestVote.schema
     scratch :valid_vote, inputSndRequestVote.schema
     scratch :max_log_term, [] => [:term]
+    scratch :append_entries, inputSndAppendEntries.schema
+    scratch :append_entry, inputSndAppendEntries.schema
+    scratch :reset, [] => [:timer]
+    scratch :response_append_entry, outputRspAppendEntries.schema
   end
   
   bootstrap do
@@ -47,6 +53,54 @@ module Follower
     outputRspRequestVote <= valid_vote do |s|
       [s.candidate, s.voter, s.term, true]
     end
+  end
+  
+  bloom :append_entries do
+    append_entries <= inputSndAppendEntries do |a|
+      if a.term >= current_term.first.first
+    end
+    append_entry <= append_entries.argmax([], :term)
+    current_term <+- append_entry.first.term 
+    timer <= append_entry do
+      ["RESET"]
+    end
+    #Indexes equal
+    log_add <= append_entry do |a|
+      if max_index.first.first == a.prev_index and 
+        log_max_term.first.first == a.prev_term
+        [max_index.first.first+1, a.term, a.entry]
+      end
+    end
+    #Follower max index less than leader's index
+    outputRspAppendEntries <= append_entry do |a|
+      if max_index.first.first < a.prev_index 
+        [ip_port, a.leader, max_index.first.first+1]
+      end
+    end
+    #Follower index greater than leader's index
+    outputRspAppendEntries <= append_entry do |a|
+      if max_index.first.first == a.prev_index and log_max_term.first.first != a.prev_term
+        [ip_port, a.leader, a.prev_index]
+      end
+    end
+    #Send same request after we del uncommitted entries from our log
+    outputRspAppendEntries <= append_entry do |a|
+      if max_index.first.first > a.prev_index
+        [ip_port, a.leader, a.prev_index+1]
+      end
+    end
+    log_del <= (log*append_entry).pairs do |l,a|
+      if max_index.first.first > a.prev_index and l.index > a.prev_index
+        l
+      end
+    end
+    log_del <= (log*append_entry).pairs do |l,a|
+      if max_index.first.first == a.prev_index and log_max_term.first.first != a.prev_term and
+        l.index == max_index.first.first
+        l
+      end
+    end
+      
   end
   
   bloom :stdio do

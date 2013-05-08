@@ -45,6 +45,12 @@ module Leader
     end
   end
   
+  bloom :append_entries do
+    #requests <= inputRspAppendEntries do |r|
+    #  [ip_port, r.follower, 
+    #end
+  end
+  
   bloom :stdio do
     #stdio <~ log_max {|l| [["LOG MAX: #{l}"]]}
   end

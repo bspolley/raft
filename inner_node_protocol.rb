@@ -9,8 +9,8 @@ module InnerNodeProtocol
     interface input,   :inputRspRequestVote, [:candidate, :voter, :term, :granted]
     interface output,  :outputSndAppendEntries, [:leader, :follower, :term, :prev_index, :prev_term, :entry, :commit_index]
     interface input,   :inputSndAppendEntries, [:leader, :follower, :term, :prev_index, :prev_term, :entry, :commit_index]
-    interface output,  :outputRspAppendEntries, [:leader, :follower, :term, :success]
-    interface input,   :inputRspAppendEntries, [:leader, :follower, :term, :success]
+    interface output,  :outputRspAppendEntries, [:leader, :follower, :index]
+    interface input,   :inputRspAppendEntries, [:leader, :follower, :index]
   end
 end
 

@@ -45,8 +45,8 @@ module Node
     follower.inputSndAppendEntries <= (f * sndAppendEntries).rights
     #rspAppendEntries <~ (f * follower.rspAppendEntries).rights
     follower.log <= log
-    log <+ follower.add_log
-    log <- follower.del_log
+    log <+ follower.log_add
+    log <- follower.log_del
     follower.current_term <= current_term
     follower.member <= member
     follower.commit_index <= commit_index
@@ -54,6 +54,7 @@ module Node
     server_type <+- not_ringing do #TODO: may be wrong? maybe not?
       [NodeProtocol::CANDIDATE]
     end
+    reset <= follower.reset
   end
   
   bloom :candidate do

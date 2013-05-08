@@ -13,6 +13,7 @@ class TestFollower < Test::Unit::TestCase
     end
     
     bloom do
+      log <+ log
       see_output_rsp_req <= outputRspRequestVote
     end
   end
