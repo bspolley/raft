@@ -20,7 +20,7 @@ module Follower
     scratch :candidate_valid_vote, inputSndRequestVote.schema
     scratch :pos_votes, inputSndRequestVote.schema
     scratch :valid_vote, inputSndRequestVote.schema
-    scratch :max_log_term, [] => [:term]
+    scratch :log_max_term, [] => [:term]
     scratch :append_entries, inputSndAppendEntries.schema
     scratch :append_entry, inputSndAppendEntries.schema
     scratch :reset, [] => [:timer]
@@ -35,14 +35,14 @@ module Follower
     max_index <= log.argmax([], :index) do |l|
       [l.index]
     end
-    max_log_term <= (log * max_index).lefts do |l|
+    log_max_term <= (log * max_index).lefts do |l|
       [l.term ] if l.index == firsty(max_index)
     end
     pos_votes <= inputSndRequestVote do |s|
       if s.term > firsty(current_term)
-        if log.empty? or s.last_term > firsty(max_log_term)
+        if s.last_term > firsty(log_max_term)
           s
-        elsif s.last_term == firsty(max_log_term) and s.last_index >= firsty(max_index)
+        elsif s.last_term == firsty(log_max_term) and s.last_index >= firsty(max_index)
           s
         end
       end
