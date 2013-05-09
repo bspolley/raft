@@ -57,11 +57,13 @@ module Follower
   
   bloom :append_entries do
     append_entries <= inputSndAppendEntries do |a|
-      if a.term >= current_term.first.first
+      a if a.term >= current_term.first.first
     end
     append_entry <= append_entries.argmax([], :term)
-    current_term <+- append_entry.first.term 
-    timer <= append_entry do
+    current_term <+- append_entry do |a|
+      [a.term]
+    end
+    reset <= append_entry do
       ["RESET"]
     end
     #Indexes equal
