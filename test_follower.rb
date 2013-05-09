@@ -14,6 +14,7 @@ class TestFollower < Test::Unit::TestCase
       table :see_current_term, current_term.schema
       table :see_output_rsp_entries, outputRspAppendEntries.schema
       table :see_log_del, log.schema
+      table :see_reset, reset.schema
     end
     
     bootstrap do
@@ -22,6 +23,7 @@ class TestFollower < Test::Unit::TestCase
     
     bloom do
       log <+ log
+      see_reset <= reset
       see_log_add <= log_add
       see_log_del <= log_del
       see_output_rsp_entries <= outputRspAppendEntries
@@ -163,6 +165,7 @@ class TestFollower < Test::Unit::TestCase
     @follower.sync_do do
       assert_equal(3, @follower.see_current_term.first.first)
       assert_equal(1, @follower.see_log_add.length)
+      assert_equal(1, @follower.see_reset.length)
     end
   end
   
@@ -219,6 +222,18 @@ class TestFollower < Test::Unit::TestCase
       assert_equal('entry2', @follower.see_log_add.first.command)
       assert_equal(0, @follower.see_output_rsp_entries.length)
       assert_equal(0, @follower.see_log_del.length)
+    end
+  end
+  
+  def test_append_less_term
+    @follower.sync_do { @follower.current_term <+- [[2]]}
+    @follower.sync_do { @follower.log <+ [[1, 1, 'a'], [2, 2, 'a'], [3, 2, 'b']]}
+    4.times { @follower.sync_do }
+    @follower.sync_do { @follower.inputSndAppendEntries <+ [['localhost:12346', 'localhost:12345', 1, 3, 2, 'entry1', 2]]}
+    4.times { @follower.sync_do }
+    @follower.sync_do do
+      assert_equal(2, @follower.see_current_term.first.term)
+      assert_equal(0, @follower.see_reset.length)
     end
   end
   

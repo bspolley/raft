@@ -82,4 +82,18 @@ class TestLeader < Test::Unit::TestCase
     end
   end
   
+  def test_rsp_append_entries
+    @leader.current_term <+- [[42]]
+    @leader.log <+ [[1,1,'a'], [2,2,'b'], [3,3,'c']]
+    4.times { pseudo_tick(42) }
+    @leader.inputRspAppendEntries <+ [["localhost:12345", "localhost:12344", 2]]
+    4.times { pseudo_tick(42) }
+    @leader.sync_do do
+      assert_equal(1, @leader.see_output_append_entries.length)
+      assert_equal(1, @leader.see_output_append_entries.first.prev_index)
+      assert_equal(1, @leader.see_output_append_entries.first.prev_term)
+      assert_equal('b', @leader.see_output_append_entries.first.entry)
+    end
+  end
+  
 end

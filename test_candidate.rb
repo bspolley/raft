@@ -12,6 +12,7 @@ class TestCandidate < Test::Unit::TestCase
       table :see_server_type, [] => [:state]
       table :see_next_current_term, [] => [:state]
       table :see_output_req_vote, [:num, :candidate, :voter, :term, :last_index, :last_term]
+      table :see_reset, reset.schema
     end
     
     bootstrap do
@@ -20,6 +21,7 @@ class TestCandidate < Test::Unit::TestCase
     
     bloom do
       see_server_type <+- server_type
+      see_reset <= reset
       see_next_current_term <+- next_current_term
       member <= [ [1, 'localhost:23451'], [2, 'localhost:23452'],
                   [3, 'localhost:23453'], [4, 'localhost:23454'],
@@ -127,6 +129,7 @@ class TestCandidate < Test::Unit::TestCase
     4.times { pseudo_tick(42) }
     @candidate.sync_do do
       assert_equal(0, @candidate.see_server_type.length)
+      assert_equal(0, @candidate.see_reset.length)
     end
   end
   
@@ -137,6 +140,7 @@ class TestCandidate < Test::Unit::TestCase
     4.times { pseudo_tick(42) }
     @candidate.sync_do do
       assert_equal(NodeProtocol::FOLLOWER, @candidate.see_server_type.length)
+      assert_equal(1, @candidate.see_reset.length)
     end
   end
   

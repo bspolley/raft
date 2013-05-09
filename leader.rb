@@ -46,9 +46,12 @@ module Leader
   end
   
   bloom :append_entries do
-    #requests <= inputRspAppendEntries do |r|
-    #  [ip_port, r.follower, 
-    #end
+    
+    outputSndAppendEntries <= (log * log * inputRspAppendEntries).combos do |l1, l2, i|
+      if l1.index == i.index-1 and l2.index == i.index
+        [ip_port, i.follower, current_term.first.first, l1.index, l1.term, l2.command, commit_index.first.first]
+      end
+    end
   end
   
   bloom :stdio do
