@@ -5,6 +5,7 @@ require 'node_protocol'
 require 'follower'
 require 'candidate'
 require 'leader'
+require 'random_timer'
   
 module Node
   include NodeProtocol
@@ -15,6 +16,8 @@ module Node
   import Candidate => :candidate
   import Leader => :leader
 
+  #TODO: need to add responses to append entries so leader can update commit index
+  #TODO: command inputs and acks back to client
   state do
     table :server_type, [] => [:state]
     scratch :f, server_type.schema #Follower 
@@ -24,18 +27,25 @@ module Node
     table :log, [:index] => [:term, :command]
     table :current_term, [] => [:term]
     table :commit_index, [] => [:index]
+    #table :leader, [] => [:ip]
+    #table :command_buffer, [:command]
   end
   
   bootstrap do
     current_term <= [[0]]
+    server_type <= [[NodeProtocol::FOLLOWER]]
   end
+  
+  #bloom :command do
+    #command_buffer <= command
+  #end
   
   bloom :election_timeout do
     not_ringing <= server_type do 
       ring.empty? ? [" "] : [] #Independent Party
     end
   end
-  
+=begin
   bloom :follower do
     f <= server_type do |s|
       s if s.first == NodeProtocol::FOLLOWER
@@ -55,8 +65,8 @@ module Node
       [NodeProtocol::CANDIDATE]
     end
     reset <= follower.reset
-  end
-  
+  end 
+=end  
   bloom :candidate do
     c <= server_type do |s|
       s if s.first == NodeProtocol::CANDIDATE
@@ -65,7 +75,7 @@ module Node
     candidate.inputRspRequestVote <= (not_ringing * c * rspRequestVote).rights
     rspRequestVote <~ (c * candidate.outputRspRequestVote).rights
     sndRequestVote <~ candidate.outputSndRequestVote
-    candidate.inputSndAppendEntries <~ (c * sndAppendEntries).rights
+    candidate.inputSndAppendEntries <= (c * sndAppendEntries).rights
     candidate.log <= log
     log <+ candidate.log
     candidate.current_term <= current_term
@@ -77,7 +87,7 @@ module Node
     candidate.ring <= ring
     reset <= follower.reset
   end
-  
+=begin
   bloom :leader do
     l <= server_type do |s|
       s if s.first == NodeProtocol::LEADER
@@ -95,4 +105,5 @@ module Node
     commit_index <+ leader.commit_index
     server_type <= leader.server_type
   end
+=end
 end

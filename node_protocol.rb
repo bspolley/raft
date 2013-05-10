@@ -11,5 +11,8 @@ module NodeProtocol
     channel   :rspRequestVote, [:@candidate, :voter, :term, :granted]
     channel   :sndAppendEntries, [:leader, :@follower, :term, :prev_index, :prev_term, :entry, :commit_index]
     channel   :rspAppendEntries, [:@leader, :follower, :term, :success]
+    #channel   :command, [:@leader, :command]
+    #channel   :command_ack, 
+    #interface input, :kdjf [:command]
   end
 end
