@@ -47,7 +47,6 @@ module Leader
   end
   
   bloom :append_entries do
-    
     outputSndAppendEntries <= (log * log * inputRspAppendEntries).combos do |l1, l2, i|
       if l1.index == i.index-1 and l2.index == i.index
         [ip_port_scratch.first.first, i.follower, current_term.first.first, l1.index, l1.term, l2.command, commit_index.first.first]
@@ -58,6 +57,8 @@ module Leader
   bloom :stdio do
     #stdio <~ log_max {|l| [["LOG MAX: #{l}"]]}
     #stdio <~ ip_port_scratch {|l| [["IP: #{l}"]]}
+    #stdio <~ outputSndAppendEntries {|l| [["outSndAppendEntries: #{l}"]]}
+    #stdio <~ inputRspAppendEntries {|l| [["inputRspAppendEntries: #{l}"]]}
   end
   
 

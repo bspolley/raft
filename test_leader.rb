@@ -27,6 +27,7 @@ class TestLeader < Test::Unit::TestCase
       member <= [ [1, 'localhost:23451'], [2, 'localhost:23452'],
                   [3, 'localhost:23453'], [4, 'localhost:23454'],
                   [5, 'localhost:12345']]
+      ip_port_scratch <= [["somecandidatestring"]]
     end
   end
   
@@ -86,14 +87,20 @@ class TestLeader < Test::Unit::TestCase
   def test_rsp_append_entries
     @leader.current_term <+- [[42]]
     @leader.log <+ [[1,1,'a'], [2,2,'b'], [3,3,'c']]
-    4.times { pseudo_tick(42) }
+    1.times { pseudo_tick(42) }
     @leader.inputRspAppendEntries <+ [["localhost:12345", "localhost:12344", 2]]
-    4.times { pseudo_tick(42) }
+    1.times { pseudo_tick(42) }
     @leader.sync_do do
-      assert_equal(1, @leader.see_output_append_entries.length)
-      assert_equal(1, @leader.see_output_append_entries.first.prev_index)
-      assert_equal(1, @leader.see_output_append_entries.first.prev_term)
-      assert_equal('b', @leader.see_output_append_entries.first.entry)
+      found = false
+      @leader.see_output_append_entries do |e|
+        if e.prev_index == 1
+          assert_equal(1, e.prev_index)
+          assert_equal(1, e.prev_term)
+          assert_equal('b', e.entry) 
+          found = true
+        end 
+      end
+      assert(found)
     end
   end
   
