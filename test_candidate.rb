@@ -31,6 +31,7 @@ class TestCandidate < Test::Unit::TestCase
       see_output_req_vote <= outputSndRequestVote do |o|
         [budtime, o.candidate, o.voter, o.term, o.last_index, o.last_term]
       end
+      ip_port_scratch <= [["somecandidatestring"]]
     end
   end
   
