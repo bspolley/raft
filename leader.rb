@@ -9,7 +9,7 @@ module Leader
   
   state do
     scratch :member, [:ident] => [:host]
-    table :log, [:index] => [:term, :command]
+    scratch :log, [:index] => [:term, :command]
     table :current_term, [] => [:term]
     table :commit_index, [] => [:index]
     scratch :server_type, [] => [:state]
