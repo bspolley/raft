@@ -27,6 +27,10 @@ module Candidate
     scratch :ip_port_scratch, [] => [:grr]
   end
   
+  bootstrap do
+    current_term <= [[0]]
+  end
+  
   # This clears all votes if you have to 
   bloom :empty_votes do   
     votes <- (better_candidate * votes).rights
@@ -50,7 +54,7 @@ module Candidate
       [l.term] 
     end
     outputSndRequestVote <= (timer * member).rights do |m|
-      [m.host, ip_port_scratch.first.first, current_term.first.first, max_index.first.first, log_max_term.first.first]
+      [ip_port_scratch.first.first, m.host, current_term.first.first, max_index.first.first, log_max_term.first.first]
     end
     votes <= inputRspRequestVote do |r|
       [r.voter] 
@@ -81,7 +85,8 @@ module Candidate
   bloom :stdio do 
     #stdio <~ ip_port {|i| [["IPPORT: #{i}"]]}
     #stdio <~ server_type {|s| [["Server type: #{s}"]]}
-    #stdio <~ inputSndRequestVote {|s| [["Send Request Vote: #{s}"]]}
+    #stdio <~ inputSndRequestVote {|s| [["Send Request Vote (in candidate): #{s}"]]}
+    stdio <~ inputSndAppendEntries {|s| [["Send Append Vote (in candidate): #{s}"]]}
     #stdio <~ better_candidate {|b| [["Better candidate: #{b}"]]}
     #stdio <~ is_follower {|f| [["Is follower: #{f}"]]}
     #stdio <~ tmp_server_type {|t| [["TMP Server Type: #{t}"]]}
@@ -94,7 +99,6 @@ module Candidate
     #stdio <~ timer {|t| [["Timer: #{t}"]]}
     #stdio <~ log {|l| [["LOG: #{l}"]]}
     #stdio <~ [["TICK"]]
-    
   end
   
 end

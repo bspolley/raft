@@ -10,9 +10,9 @@ class TestNode < Test::Unit::TestCase
     
     bootstrap do
       add_member <= [
-        [1, 'localhost:54321'],
-        [2, 'localhost:54322'],
-        [3, 'localhost:54323']
+        [1, 'localhost:12345'],
+        [2, 'localhost:12346'],
+        [3, 'localhost:12347']
       ]
     end
   end
@@ -21,23 +21,20 @@ class TestNode < Test::Unit::TestCase
   def setup
     @p1 = N.new(:port => 12345)
     @p1.run_bg
-    #@p2 = N.new
-    #@p2.run_bg
-    #@p3 = N.new
-    #@p3.run_bg
+    @p2 = N.new(:port => 12346)
+    @p2.run_bg
+    @p3 = N.new(:port => 12347)
+    @p3.run_bg
   end
   
   def teardown
     @p1.stop
+    @p2.stop
+    @p3.stop
   end
   
-  def test_rowo
-    @p1.tick
-    @p1.tick
-    @p1.tick
-    @p1.tick
-    @p1.tick
-    @p1.tick
+  def test_basic
+    
   end
   
 end

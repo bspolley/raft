@@ -47,26 +47,30 @@ module Node
       ring.empty? ? [" "] : [] #Independent Party
     end
   end
+
   bloom :follower do
     f <= server_type do |s|
       s if s.first == NodeProtocol::FOLLOWER
     end
     follower.inputSndRequestVote <= (not_ringing * f * sndRequestVote).rights
     rspRequestVote <~ (f * follower.outputRspRequestVote).rights
-    follower.inputSndAppendEntries <= (f * sndAppendEntries).rights
-    #rspAppendEntries <~ (f * follower.rspAppendEntries).rights
+    follower.inputSndAppendEntries <= (not_ringing * f * sndAppendEntries).rights
     follower.log <= log
     log <+ follower.log_add
     log <- follower.log_del
-    follower.current_term <= current_term
+    follower.current_term <+- current_term
     follower.member <= member
     follower.commit_index <= commit_index
     commit_index <+ follower.commit_index
-    server_type <+- not_ringing do #TODO: may be wrong? maybe not?
+    server_type <+- ring do
       [NodeProtocol::CANDIDATE]
     end
+    current_term <+- ring do
+      [current_term.first.first + 1]
+    end
     reset <= follower.reset
-  end 
+  end
+
   bloom :candidate do
     c <= server_type do |s|
       s if s.first == NodeProtocol::CANDIDATE
@@ -78,8 +82,8 @@ module Node
     candidate.inputSndAppendEntries <= (c * sndAppendEntries).rights
     candidate.log <= log
     log <+ candidate.log
-    candidate.current_term <= current_term
-    current_term <+ candidate.next_current_term
+    candidate.current_term <+- current_term
+    current_term <+- candidate.next_current_term
     candidate.member <= member
     candidate.commit_index <= commit_index
     commit_index <+ candidate.commit_index
@@ -89,7 +93,6 @@ module Node
     candidate.ip_port_scratch <= [[ip_port]]
   end
 
-=begin
   bloom :leader do
     l <= server_type do |s|
       s if s.first == NodeProtocol::LEADER
@@ -100,13 +103,18 @@ module Node
     #rspAppendEntries <~ (l * leader.rspAppendEntries).rights
     leader.log <= log
     log <+ leader.log
-    leader.current_term <= current_term
-    current_term <+ leader.current_term
+    leader.current_term <+- current_term
+    current_term <+- leader.current_term
     leader.member <= member
     leader.commit_index <= commit_index
     commit_index <+ leader.commit_index
     server_type <= leader.server_type
     leader.ip_port_scratch <= [[ip_port]]
   end
-=end
+
+  bloom :stdio do 
+    stdio <~ server_type {|s| [["Server Type: #{s} #{ip_port} #{budtime} #{current_term.first.first}"]]}
+    stdio <~ candidate.outputSndRequestVote {|v| [["Candidate votes for me: #{v}"]]}
+    #stdio <~ candidate.inputSndRequestVote {|v| [["Candidate votes: #{v}"]]}
+  end
 end
