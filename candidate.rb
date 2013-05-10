@@ -24,10 +24,11 @@ module Candidate
     scratch :tmp_server_type, [:state]
     scratch :next_current_term, [] => [:term]
     scratch :reset, [] => [:timer]
+    scratch :ip_port_scratch, [] => [:grr]
   end
   
   # This clears all votes if you have to 
-  bloom :empty_votes do
+  bloom :empty_votes do   
     votes <- (better_candidate * votes).rights
     votes <- (ring * votes).rights
     votes <- (server_type * votes).pairs do |s, v|
@@ -49,7 +50,7 @@ module Candidate
       [l.term] 
     end
     outputSndRequestVote <= (timer * member).rights do |m|
-      [m.host, 'ip_port', current_term.first.first, max_index.first.first, log_max_term.first.first]
+      [m.host, ip_port_scratch.first.first, current_term.first.first, max_index.first.first, log_max_term.first.first]
     end
     votes <= inputRspRequestVote do |r|
       [r.voter] 
@@ -63,6 +64,7 @@ module Candidate
     next_current_term <= ring do
       [current_term.first.first + 1] if server_type.empty?
     end
+
   end
   
   bloom :append_entries do

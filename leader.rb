@@ -16,6 +16,7 @@ module Leader
     scratch :better_candidate, [] => inputSndRequestVote.schema
     periodic :heartbeat, 0.02
     scratch :max_index, [] => [:index]
+    scratch :ip_port_scratch, [] => [:grr]
     scratch :log_max, [] => [:index, :term, :entry]
   end
   
@@ -41,7 +42,7 @@ module Leader
     end
     # channel   :sndAppendEntries, [:leader, :@follower, :term, :prev_index, :prev_term, :entry, :commit_index]
     outputSndAppendEntries <= (heartbeat * member).rights do |m|
-      [ip_port, m.host, current_term.first.first, log_max.first.index, log_max.first.term, log_max.first.entry, commit_index.first.first] unless m.host == ip_port
+      [ip_port_scratch.first.first, m.host, current_term.first.first, log_max.first.index, log_max.first.term, log_max.first.entry, commit_index.first.first] unless m.host == ip_port_scratch.first.first
     end
   end
   
@@ -49,13 +50,14 @@ module Leader
     
     outputSndAppendEntries <= (log * log * inputRspAppendEntries).combos do |l1, l2, i|
       if l1.index == i.index-1 and l2.index == i.index
-        [ip_port, i.follower, current_term.first.first, l1.index, l1.term, l2.command, commit_index.first.first]
+        [ip_port_scratch.first.first, i.follower, current_term.first.first, l1.index, l1.term, l2.command, commit_index.first.first]
       end
     end
   end
   
   bloom :stdio do
     #stdio <~ log_max {|l| [["LOG MAX: #{l}"]]}
+    #stdio <~ ip_port_scratch {|l| [["IP: #{l}"]]}
   end
   
 

@@ -9,7 +9,6 @@ class TestNode < Test::Unit::TestCase
     include Node
     
     bootstrap do
-      p "sldkfj"
       add_member <= [
         [1, 'localhost:54321'],
         [2, 'localhost:54322'],
@@ -21,7 +20,6 @@ class TestNode < Test::Unit::TestCase
   
   def setup
     @p1 = N.new(:port => 12345)
-    
     @p1.run_bg
     #@p2 = N.new
     #@p2.run_bg

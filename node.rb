@@ -32,8 +32,10 @@ module Node
   end
   
   bootstrap do
+    log <= [[0,0,'dummy']]
     current_term <= [[0]]
     server_type <= [[NodeProtocol::FOLLOWER]]
+    commit_index <= [[0]]
   end
   
   #bloom :command do
@@ -45,7 +47,6 @@ module Node
       ring.empty? ? [" "] : [] #Independent Party
     end
   end
-=begin
   bloom :follower do
     f <= server_type do |s|
       s if s.first == NodeProtocol::FOLLOWER
@@ -66,7 +67,6 @@ module Node
     end
     reset <= follower.reset
   end 
-=end  
   bloom :candidate do
     c <= server_type do |s|
       s if s.first == NodeProtocol::CANDIDATE
@@ -86,7 +86,9 @@ module Node
     server_type <+- candidate.server_type
     candidate.ring <= ring
     reset <= follower.reset
+    candidate.ip_port_scratch <= [[ip_port]]
   end
+
 =begin
   bloom :leader do
     l <= server_type do |s|
@@ -104,6 +106,7 @@ module Node
     leader.commit_index <= commit_index
     commit_index <+ leader.commit_index
     server_type <= leader.server_type
+    leader.ip_port_scratch <= [[ip_port]]
   end
 =end
 end

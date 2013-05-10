@@ -76,19 +76,19 @@ module Follower
     #Follower max index less than leader's index
     outputRspAppendEntries <= append_entry do |a|
       if max_index.first.first < a.prev_index 
-        [ip_port, a.leader, max_index.first.first+1]
+        [a.follower, a.leader, max_index.first.first+1]
       end
     end
     #Follower index greater than leader's index
     outputRspAppendEntries <= append_entry do |a|
       if max_index.first.first == a.prev_index and log_max_term.first.first != a.prev_term
-        [ip_port, a.leader, a.prev_index]
+        [a.follower, a.leader, a.prev_index]
       end
     end
     #Send same request after we del uncommitted entries from our log
     outputRspAppendEntries <= append_entry do |a|
       if max_index.first.first > a.prev_index
-        [ip_port, a.leader, a.prev_index+1]
+        [a.follower, a.leader, a.prev_index+1]
       end
     end
     log_del <= (log*append_entry).pairs do |l,a|
