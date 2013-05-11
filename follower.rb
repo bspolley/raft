@@ -109,7 +109,7 @@ module Follower
     #stdio <~ valid_vote{|v| [["Valid votes: #{v}"]]}
     #stdio <~ sndRequestVote {|s| [["Send Request Vote: #{s}"]]}
     #stdio <~ rspRequestVote {|s| [["Response Request Vote: #{s}"]]}
-    stdio <~ append_entry {|a| [["APPEND: #{a}"]]}
+    #stdio <~ append_entry {|a| [["APPEND: #{a}"]]}
   end
   
   def firsty(something)
