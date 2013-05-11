@@ -107,7 +107,7 @@ module Follower
     #stdio <~ pos_votes {|p| [["Pos votes: #{p}"]]}
     #stdio <~ candidate_valid_vote {|c| [["Cand valid votes: #{c}"]]}
     #stdio <~ valid_vote{|v| [["Valid votes: #{v}"]]}
-    #stdio <~ sndRequestVote {|s| [["Send Request Vote: #{s}"]]}
+    stdio <~ sndRequestVote {|s| [["Send Request Vote (in follower): #{s}"]]}
     #stdio <~ rspRequestVote {|s| [["Response Request Vote: #{s}"]]}
     #stdio <~ append_entry {|a| [["APPEND: #{a}"]]}
   end

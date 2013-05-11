@@ -76,6 +76,9 @@ module Node
     c <= server_type do |s|
       s if s.first == NodeProtocol::CANDIDATE
     end
+    candidate.candidate <= server_type do |s|
+      s if s.first == NodeProtocol::CANDIDATE
+    end
     candidate.inputSndRequestVote <= (not_ringing * c * sndRequestVote).rights
     candidate.inputRspRequestVote <= (not_ringing * c * rspRequestVote).rights
     rspRequestVote <~ (c * candidate.outputRspRequestVote).rights
@@ -98,6 +101,9 @@ module Node
     l <= server_type do |s|
       s if s.first == NodeProtocol::LEADER
     end
+    leader.leader <= server_type do |s|
+      s if s.first == NodeProtocol::LEADER
+    end
     leader.inputSndRequestVote <= (l * sndRequestVote).rights
     leader.inputSndAppendEntries <= (l * sndAppendEntries).rights
     sndAppendEntries <~ leader.outputSndAppendEntries
@@ -114,6 +120,6 @@ module Node
   bloom :stdio do 
     stdio <~ server_type {|s| [["Server Type: #{s} #{ip_port} #{budtime} #{current_term.first.first}"]]}
     stdio <~ candidate.outputSndRequestVote {|v| [["Candidate votes for me: #{v}"]]}
-    #stdio <~ candidate.inputSndRequestVote {|v| [["Candidate votes: #{v}"]]}
+    stdio <~ candidate.inputSndRequestVote {|v| [["Candidate in requests: #{v}"]]}
   end
 end

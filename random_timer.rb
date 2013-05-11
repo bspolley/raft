@@ -33,7 +33,7 @@ module RandomTimer
   end
   
   def random_input
-    ["random", (150.0+rand(150.0))/1000.0]
+    ["random", (500.0+rand(1000.0))/1000.0]
   end
   
 end

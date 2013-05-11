@@ -25,6 +25,7 @@ module Candidate
     scratch :reset, [] => [:timer]
     scratch :tmp_server_type, [:state]
     scratch :ip_port_scratch, [] => [:grr]
+    scratch :candidate, [] => [:state]
   end
   
   # This clears all votes if you have to 
@@ -49,7 +50,7 @@ module Candidate
     log_max_term <= log.argmax([], :index) do |l|
       [l.term] 
     end
-    outputSndRequestVote <= (timer * member).rights do |m|
+    outputSndRequestVote <= (timer * member * candidate).rights do |m|
       [ip_port_scratch.first.first, m.host, current_term.first.first, max_index.first.first, log_max_term.first.first]
     end
     votes <= inputRspRequestVote do |r|
@@ -69,6 +70,7 @@ module Candidate
   
   bloom :append_entries do
     is_follower <= inputSndAppendEntries do |a|
+      p "problem"
       [NodeProtocol::FOLLOWER] if a.term >= current_term.first.first
     end
     reset <= inputSndAppendEntries do |a|
@@ -81,7 +83,7 @@ module Candidate
   bloom :stdio do 
     #stdio <~ ip_port {|i| [["IPPORT: #{i}"]]}
     #stdio <~ server_type {|s| [["Server type: #{s}"]]}
-    #stdio <~ inputSndRequestVote {|s| [["Send Request Vote (in candidate): #{s}"]]}
+    stdio <~ inputSndRequestVote {|s| [["Send Request Vote (in candidate): #{s}"]]}
     #stdio <~ inputSndAppendEntries {|s| [["Send Append Vote (in candidate): #{s}"]]}
     #stdio <~ better_candidate {|b| [["Better candidate: #{b}"]]}
     #stdio <~ is_follower {|f| [["Is follower: #{f}"]]}

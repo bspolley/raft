@@ -18,6 +18,7 @@ module Leader
     scratch :max_index, [] => [:index]
     scratch :ip_port_scratch, [] => [:grr]
     scratch :log_max, [] => [:index, :term, :entry]
+    scratch :leader, [] => [:state]
   end
   
   bloom :leader_election do
@@ -37,7 +38,7 @@ module Leader
       [l.index, l.term, l.command] if l.index == max_index.first.first #entry and command same thing
     end
     # channel   :sndAppendEntries, [:leader, :@follower, :term, :prev_index, :prev_term, :entry, :commit_index]
-    outputSndAppendEntries <= (heartbeat * member).rights do |m|
+    outputSndAppendEntries <= (heartbeat * member * leader).rights do |m|
       [ip_port_scratch.first.first, m.host, current_term.first.first, log_max.first.index, log_max.first.term, log_max.first.entry, commit_index.first.first] unless m.host == ip_port_scratch.first.first
     end
   end
@@ -55,6 +56,7 @@ module Leader
     #stdio <~ ip_port_scratch {|l| [["IP: #{l}"]]}
     #stdio <~ outputSndAppendEntries {|l| [["outSndAppendEntries: #{l}"]]}
     #stdio <~ inputRspAppendEntries {|l| [["inputRspAppendEntries: #{l}"]]}
+    stdio <~ sndRequestVote {|s| [["Send Request Vote (in leader): #{s}"]]}
   end
   
 
