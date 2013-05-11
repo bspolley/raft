@@ -15,7 +15,7 @@ class TestTimer < Test::Unit::TestCase
     @p1.run_bg
   end
   
-  def test_rowo
+  def test_alarm
     @p1.set_alarm <+ [["test", 1]]
     @p1.del_alarm <+ [["test"]]
     sleep(5)

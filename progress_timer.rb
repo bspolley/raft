@@ -18,7 +18,7 @@ module ProgressTimer
   state do
     table :timer_state, [:name] => [:start_tm, :time_out]
     table :alrm_buf, set_alarm.schema
-    periodic :timer, 0.05
+    periodic :timer, 0.01
   end
 
   bloom :timer_logic do
@@ -34,4 +34,10 @@ module ProgressTimer
     timer_state <- (timer_state * alarm).lefts(:name => :name)
     timer_state <- (timer_state * del_alarm).lefts(:name => :name)
   end
+  
+  bloom :stdio do
+#    stdio <~ one_alarm {|s| [["Set Alarm: #{s}"]]}
+    stdio <~ timer_state {|s| [["Alarms: #{s}"]]}
+  end
+  
 end

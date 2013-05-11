@@ -93,7 +93,7 @@ module Node
     commit_index <+ candidate.commit_index
     server_type <+- candidate.server_type
     candidate.ring <= ring
-    reset <= follower.reset
+    reset <= candidate.reset
     candidate.ip_port_scratch <= [[ip_port]]
   end
 
@@ -103,6 +103,9 @@ module Node
     end
     leader.leader <= server_type do |s|
       s if s.first == NodeProtocol::LEADER
+    end
+    reset <= server_type do |s|
+      ["RESET"] if s.first == NodeProtocol::LEADER
     end
     leader.inputSndRequestVote <= (l * sndRequestVote).rights
     leader.inputSndAppendEntries <= (l * sndAppendEntries).rights
@@ -119,7 +122,8 @@ module Node
 
   bloom :stdio do 
     stdio <~ server_type {|s| [["Server Type: #{s} #{ip_port} #{budtime} #{current_term.first.first}"]]}
-    stdio <~ candidate.outputSndRequestVote {|v| [["Candidate votes for me: #{v}"]]}
-    stdio <~ candidate.inputSndRequestVote {|v| [["Candidate in requests: #{v}"]]}
+    #stdio <~ candidate.outputSndRequestVote {|v| [["Candidate votes for me: #{v}"]]}
+    #stdio <~ candidate.inputSndRequestVote {|v| [["Candidate in requests: #{v}"]]}
+    stdio <~ reset {|v| [["Reset: #{v} #{budtime}"]]}
   end
 end

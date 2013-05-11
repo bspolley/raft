@@ -16,8 +16,7 @@ module Candidate
     scratch :server_type, [] => [:state]
     scratch :better_candidate, [] => inputSndRequestVote.schema
     scratch :ring, [:name, :time_out]
-    #periodic :timer, 0.02
-    periodic :timer, 0.5
+    periodic :timer, 0.02
     table :votes, [:client]
     scratch :max_index, [] => [:index]
     scratch :log_max_term, [] => [:term]
@@ -51,7 +50,7 @@ module Candidate
     log_max_term <= log.argmax([], :index) do |l|
       [l.term] 
     end
-    outputSndRequestVote <= (timer * member * candidate).rights do |m|
+    outputSndRequestVote <= (timer * member * candidate).combos do |t, m, c|
       [ip_port_scratch.first.first, m.host, current_term.first.first, max_index.first.first, log_max_term.first.first]
     end
     votes <= inputRspRequestVote do |r|
@@ -71,7 +70,6 @@ module Candidate
   
   bloom :append_entries do
     is_follower <= inputSndAppendEntries do |a|
-      p "problem"
       [NodeProtocol::FOLLOWER] if a.term >= current_term.first.first
     end
     reset <= inputSndAppendEntries do |a|

@@ -23,8 +23,8 @@ class TestNode < Test::Unit::TestCase
     #debugger
     @p1 = N.new(:port => 12345)
     @p1.run_bg
-    #@p2 = N.new(:port => 12346)
-    #@p2.run_bg
+    @p2 = N.new(:port => 12346)
+    @p2.run_bg
     #@p3 = N.new(:port => 12347)
     #@p3.run_bg
   end

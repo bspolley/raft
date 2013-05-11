@@ -14,7 +14,7 @@ module Leader
     table :commit_index, [] => [:index]
     scratch :server_type, [] => [:state]
     scratch :better_candidate, [] => inputSndRequestVote.schema
-    periodic :heartbeat, 0.02
+    periodic :heartbeat, 0.2
     scratch :max_index, [] => [:index]
     scratch :ip_port_scratch, [] => [:grr]
     scratch :log_max, [] => [:index, :term, :entry]
@@ -39,7 +39,7 @@ module Leader
       [l.index, l.term, l.command] if l.index == max_index.first.first #entry and command same thing
     end
     # channel   :sndAppendEntries, [:leader, :@follower, :term, :prev_index, :prev_term, :entry, :commit_index]
-    outputSndAppendEntries <= (heartbeat * member * leader).rights do |m|
+    outputSndAppendEntries <= (heartbeat * member * leader).combos do |h, m, l|
       [ip_port_scratch.first.first, m.host, current_term.first.first, log_max.first.index, log_max.first.term, log_max.first.entry, commit_index.first.first] unless m.host == ip_port_scratch.first.first
     end
   end
