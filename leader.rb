@@ -10,7 +10,7 @@ module Leader
   state do
     scratch :member, [:ident] => [:host]
     scratch :log, [:index] => [:term, :command]
-    table :current_term, [] => [:term]
+    scratch :current_term, [] => [:term]
     table :commit_index, [] => [:index]
     scratch :server_type, [] => [:state]
     scratch :better_candidate, [] => inputSndRequestVote.schema
@@ -18,10 +18,6 @@ module Leader
     scratch :max_index, [] => [:index]
     scratch :ip_port_scratch, [] => [:grr]
     scratch :log_max, [] => [:index, :term, :entry]
-  end
-  
-  bootstrap do
-    current_term <= [[0]]
   end
   
   bloom :leader_election do

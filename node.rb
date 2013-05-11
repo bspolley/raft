@@ -58,7 +58,8 @@ module Node
     follower.log <= log
     log <+ follower.log_add
     log <- follower.log_del
-    follower.current_term <+- current_term
+    follower.current_term <= current_term
+    current_term <+- follower.next_current_term
     follower.member <= member
     follower.commit_index <= commit_index
     commit_index <+ follower.commit_index
@@ -82,7 +83,7 @@ module Node
     candidate.inputSndAppendEntries <= (c * sndAppendEntries).rights
     candidate.log <= log
     log <+ candidate.log
-    candidate.current_term <+- current_term
+    candidate.current_term <= current_term
     current_term <+- candidate.next_current_term
     candidate.member <= member
     candidate.commit_index <= commit_index
@@ -100,11 +101,9 @@ module Node
     leader.inputSndRequestVote <= (l * sndRequestVote).rights
     leader.inputSndAppendEntries <= (l * sndAppendEntries).rights
     sndAppendEntries <~ leader.outputSndAppendEntries
-    #rspAppendEntries <~ (l * leader.rspAppendEntries).rights
     leader.log <= log
     log <+ leader.log
-    leader.current_term <+- current_term
-    current_term <+- leader.current_term
+    leader.current_term <= current_term
     leader.member <= member
     leader.commit_index <= commit_index
     commit_index <+ leader.commit_index

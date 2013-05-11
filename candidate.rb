@@ -10,7 +10,8 @@ module Candidate
   state do
     scratch :member, [:ident] => [:host]
     scratch :log, [:index] => [:term, :command]
-    table :current_term, [] => [:term]
+    scratch :current_term, [] => [:term]
+    scratch :next_current_term, [] => [:term]
     table :commit_index, [] => [:index]
     scratch :server_type, [] => [:state]
     scratch :better_candidate, [] => inputSndRequestVote.schema
@@ -21,14 +22,9 @@ module Candidate
     scratch :log_max_term, [] => [:term]
     scratch :is_follower, [] => [:state]
     scratch :is_leader, [] => [:state]
-    scratch :tmp_server_type, [:state]
-    scratch :next_current_term, [] => [:term]
     scratch :reset, [] => [:timer]
+    scratch :tmp_server_type, [:state]
     scratch :ip_port_scratch, [] => [:grr]
-  end
-  
-  bootstrap do
-    current_term <= [[0]]
   end
   
   # This clears all votes if you have to 
@@ -86,7 +82,7 @@ module Candidate
     #stdio <~ ip_port {|i| [["IPPORT: #{i}"]]}
     #stdio <~ server_type {|s| [["Server type: #{s}"]]}
     #stdio <~ inputSndRequestVote {|s| [["Send Request Vote (in candidate): #{s}"]]}
-    stdio <~ inputSndAppendEntries {|s| [["Send Append Vote (in candidate): #{s}"]]}
+    #stdio <~ inputSndAppendEntries {|s| [["Send Append Vote (in candidate): #{s}"]]}
     #stdio <~ better_candidate {|b| [["Better candidate: #{b}"]]}
     #stdio <~ is_follower {|f| [["Is follower: #{f}"]]}
     #stdio <~ tmp_server_type {|t| [["TMP Server Type: #{t}"]]}

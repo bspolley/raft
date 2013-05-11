@@ -19,6 +19,7 @@ class TestFollower < Test::Unit::TestCase
     
     bootstrap do
       log <= [[0, 0, "dummy"]]
+      current_term <= [[42]]
     end
     
     bloom do
@@ -26,6 +27,7 @@ class TestFollower < Test::Unit::TestCase
       see_reset <= reset
       see_log_add <= log_add
       see_log_del <= log_del
+      current_term <+ current_term
       see_output_rsp_entries <= outputRspAppendEntries
       see_current_term <+- current_term
       see_output_rsp_req <= outputRspRequestVote

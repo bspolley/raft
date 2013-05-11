@@ -12,7 +12,8 @@ module Follower
     scratch :log, [:index] => [:term, :command]
     scratch :log_add, [:index] => [:term, :command]
     scratch :log_del, [:index] => [:term, :command]
-    table :current_term, [] => [:term]
+    scratch :current_term, [] => [:term]
+    scratch :next_current_term, [] => [:term]
     table :voted_for, [] => [:term]
     scratch :commit_index, [] => [:index]
     scratch :server_type, [] => [:state]
@@ -27,9 +28,6 @@ module Follower
     scratch :response_append_entry, outputRspAppendEntries.schema
   end
   
-  bootstrap do
-    current_term <= [[0]]
-  end
   #TODO: reset timer if get heartbeat from LEADER
   bloom :leader_election do
     max_index <= log.argmax([], :index) do |l|
@@ -49,7 +47,7 @@ module Follower
     end
     candidate_valid_vote <= pos_votes.argagg(:choose, [], :candidate)
     valid_vote <= (candidate_valid_vote * pos_votes).rights(:candidate => :candidate)
-    current_term <+- valid_vote {|s| [s.term]}
+    next_current_term <= valid_vote {|s| [s.term]}
     outputRspRequestVote <= valid_vote do |s|
       [s.candidate, s.voter, s.term, true]
     end
@@ -60,7 +58,7 @@ module Follower
       a if a.term >= current_term.first.first
     end
     append_entry <= append_entries.argmax([], :term)
-    current_term <+- append_entry do |a|
+    next_current_term <= append_entry do |a|
       [a.term]
     end
     reset <= append_entry do

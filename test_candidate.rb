@@ -16,7 +16,7 @@ class TestCandidate < Test::Unit::TestCase
     end
     
     bootstrap do
-      current_term <= [[0]]
+      current_term <= [[42]]
       log <= [[0, 0, "dummy"]]
     end
     
@@ -24,6 +24,7 @@ class TestCandidate < Test::Unit::TestCase
       see_server_type <+- server_type
       see_reset <= reset
       log <+ log
+      current_term <+ current_term
       see_next_current_term <+- next_current_term
       member <= [ [1, 'localhost:23451'], [2, 'localhost:23452'],
                   [3, 'localhost:23453'], [4, 'localhost:23454'],
@@ -50,7 +51,6 @@ class TestCandidate < Test::Unit::TestCase
   end
   
   def test_higher_opponent
-    @candidate.current_term <+- [[42]]
     4.times { pseudo_tick(42) }
     @candidate.inputSndRequestVote <+ [['localhost:12347', 'localhost:12345', 43, 2, 3]]
     4.times { pseudo_tick(42) }
@@ -60,7 +60,6 @@ class TestCandidate < Test::Unit::TestCase
   end
   
   def test_lower_opponent
-    @candidate.current_term <+- [[42]]
     4.times { pseudo_tick(42) }
     @candidate.inputSndRequestVote <+ [['localhost:12347', 'localhost:12345', 1, 2, 3]]
     4.times { pseudo_tick(42) }
@@ -70,7 +69,6 @@ class TestCandidate < Test::Unit::TestCase
   end
   
   def test_equal_opponent
-    @candidate.current_term <+- [[42]]
     4.times { pseudo_tick(42) }
     @candidate.inputSndRequestVote <+ [['localhost:12347', 'localhost:12345', 1, 2, 3]]
     4.times { pseudo_tick(42) }
@@ -80,7 +78,6 @@ class TestCandidate < Test::Unit::TestCase
   end
   
   def test_new_election
-    @candidate.current_term <+- [[42]]
     4.times { pseudo_tick(42) }
     @candidate.ring <+ [["RINGED", "OMG"]]
     sleep(0.5) #ensure 300 ms has passed
@@ -91,7 +88,6 @@ class TestCandidate < Test::Unit::TestCase
   end
   
   def test_elected_leader
-    @candidate.current_term <+- [[42]]
     4.times { pseudo_tick(42) }
     @candidate.async_do {
       @candidate.inputRspRequestVote <+ [ ['localhost:12345', 'localhost:23451', 42, 'true'],
@@ -104,7 +100,6 @@ class TestCandidate < Test::Unit::TestCase
   end
   
   def test_election_no_result_yet
-    @candidate.current_term <+- [[42]]
     4.times { pseudo_tick(42) }
     @candidate.inputRspRequestVote <+ [ ['localhost:12345', 'localhost:23451', 42, 'true'] ]
     sleep(0.5) #ensure 300 ms has passed
@@ -116,7 +111,6 @@ class TestCandidate < Test::Unit::TestCase
   end
   
   def test_append_entry_greater_term_leader
-    @candidate.current_term <+- [[42]]
     4.times { pseudo_tick(42) }
     @candidate.inputSndAppendEntries <+ [['localhost:12345', 'localhoast:23451', 43, 3, 42, "entry", 3]]
     4.times { pseudo_tick(42) }
@@ -126,7 +120,6 @@ class TestCandidate < Test::Unit::TestCase
   end
   
   def test_append_entry_less_term_leader
-    @candidate.current_term <+- [[42]]
     4.times { pseudo_tick(42) }
     @candidate.inputSndAppendEntries <+ [['localhost:12345', 'localhoast:23451', 41, 3, 42, "entry", 3]]
     4.times { pseudo_tick(42) }
@@ -137,7 +130,6 @@ class TestCandidate < Test::Unit::TestCase
   end
   
   def test_append_entry_equal_term_leader
-    @candidate.current_term <+- [[42]]
     4.times { pseudo_tick(42) }
     @candidate.inputSndAppendEntries <+ [['localhost:12345', 'localhoast:23451', 42, 3, 41, "entry", 3]]
     4.times { pseudo_tick(42) }

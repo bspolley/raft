@@ -16,10 +16,12 @@ class TestLeader < Test::Unit::TestCase
     bootstrap do
       log <= [[0, 0, "dummy"]]
       commit_index <= [[0]]
+      current_term <= [[42]]
     end
     
     bloom do
       log <+ log
+      current_term <+ current_term
       see_output_append_entries <= outputSndAppendEntries do |o|
         [budtime, o.leader, o.follower, o.term, o.prev_index, o.prev_term, o.entry, o.commit_index]
       end
@@ -46,7 +48,6 @@ class TestLeader < Test::Unit::TestCase
   end
   
   def test_higher_opponent
-    @leader.current_term <+- [[42]]
     4.times { pseudo_tick(42) }
     @leader.inputSndRequestVote <+ [['localhost:12347', 'localhost:12345', 43, 2, 3]]
     4.times { pseudo_tick(42) }
@@ -56,7 +57,6 @@ class TestLeader < Test::Unit::TestCase
   end
   
   def test_lower_opponent
-    @leader.current_term <+- [[42]]
     4.times { pseudo_tick(42) }
     @leader.inputSndRequestVote <+ [['localhost:12347', 'localhost:12345', 41, 2, 3]]
     4.times { pseudo_tick(42) }
@@ -66,7 +66,6 @@ class TestLeader < Test::Unit::TestCase
   end
   
   def test_equal_opponent
-    @leader.current_term <+- [[42]]
     4.times { pseudo_tick(42) }
     @leader.inputSndRequestVote <+ [['localhost:12347', 'localhost:12345', 42, 2, 3]]
     4.times { pseudo_tick(42) }
@@ -76,7 +75,6 @@ class TestLeader < Test::Unit::TestCase
   end
   
   def test_heartbeat
-    @leader.current_term <+- [[42]]
     sleep(0.5)
     4.times { pseudo_tick(42) }
     @leader.sync_do do
@@ -85,7 +83,6 @@ class TestLeader < Test::Unit::TestCase
   end
   
   def test_rsp_append_entries
-    @leader.current_term <+- [[42]]
     @leader.log <+ [[1,1,'a'], [2,2,'b'], [3,3,'c']]
     1.times { pseudo_tick(42) }
     @leader.inputRspAppendEntries <+ [["localhost:12345", "localhost:12344", 2]]
