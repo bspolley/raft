@@ -113,7 +113,7 @@ module Node
     leader.member <= member
     leader.commit_index <= commit_index
     commit_index <+ leader.commit_index
-    server_type <= leader.server_type
+    server_type <+- leader.server_type
     leader.ip_port_scratch <= [[ip_port]]
   end
 

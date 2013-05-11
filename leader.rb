@@ -28,6 +28,7 @@ module Leader
     server_type <= better_candidate.argagg(:choose, [], :candidate) do |p|
       [NodeProtocol::FOLLOWER]
     end
+    #TODO: Step down if we get an append entries that is of a term greater than ours
   end
   
   bloom :heartbeat do #<\3
