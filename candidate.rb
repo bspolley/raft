@@ -16,7 +16,8 @@ module Candidate
     scratch :server_type, [] => [:state]
     scratch :better_candidate, [] => inputSndRequestVote.schema
     scratch :ring, [:name, :time_out]
-    periodic :timer, 0.02
+    #periodic :timer, 0.02
+    periodic :timer, 0.5
     table :votes, [:client]
     scratch :max_index, [] => [:index]
     scratch :log_max_term, [] => [:term]

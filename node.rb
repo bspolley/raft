@@ -52,9 +52,9 @@ module Node
     f <= server_type do |s|
       s if s.first == NodeProtocol::FOLLOWER
     end
-    follower.inputSndRequestVote <= (not_ringing * f * sndRequestVote).rights
+    follower.inputSndRequestVote <= (not_ringing * f * sndRequestVote).combos {|r, c, v| v}
     rspRequestVote <~ (f * follower.outputRspRequestVote).rights
-    follower.inputSndAppendEntries <= (not_ringing * f * sndAppendEntries).rights
+    follower.inputSndAppendEntries <= (not_ringing * f * sndAppendEntries).combos {|r, c, v| v}
     follower.log <= log
     log <+ follower.log_add
     log <- follower.log_del
@@ -79,8 +79,8 @@ module Node
     candidate.candidate <= server_type do |s|
       s if s.first == NodeProtocol::CANDIDATE
     end
-    candidate.inputSndRequestVote <= (not_ringing * c * sndRequestVote).rights
-    candidate.inputRspRequestVote <= (not_ringing * c * rspRequestVote).rights
+    candidate.inputSndRequestVote <= (not_ringing * c * sndRequestVote).combos {|r, c, v| v}
+    candidate.inputRspRequestVote <= (not_ringing * c * rspRequestVote).combos {|r, c, v| v}
     rspRequestVote <~ (c * candidate.outputRspRequestVote).rights
     sndRequestVote <~ candidate.outputSndRequestVote
     candidate.inputSndAppendEntries <= (c * sndAppendEntries).rights

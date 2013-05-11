@@ -22,7 +22,7 @@ module RandomTimer
     set_alarm <= [random_input]
   end
   
-  bloom do 
+  bloom do
     del_alarm <= reset do
       ["random"]
     end
