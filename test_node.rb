@@ -25,18 +25,20 @@ class TestNode < Test::Unit::TestCase
     @p1.run_bg
     @p2 = N.new(:port => 12346)
     @p2.run_bg
-    #@p3 = N.new(:port => 12347)
-    #@p3.run_bg
+    @p3 = N.new(:port => 12347)
+    @p3.run_bg
   end
   
   def teardown
     @p1.stop
-    #@p2.stop
-    #@p3.stop
+    @p2.stop
+    @p3.stop
   end
   
   def test_basic
-    sleep 1.5
+    sleep 3
+    @p1.stop
+    sleep 3
   end
   
 end

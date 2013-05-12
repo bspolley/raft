@@ -38,7 +38,7 @@ module RandomTimer
   
   bloom :stdio do
 #    stdio <~ one_alarm {|s| [["Set Alarm: #{s}"]]}
-    stdio <~ reset {|s| [["Reset: #{s}"]]}
+    stdio <~ reset {|s| [["Reset: #{s} #{budtime}"]]}
     stdio <~ ring {|s| [["Ringing: #{s}"]]}
   end
   

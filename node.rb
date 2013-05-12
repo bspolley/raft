@@ -120,10 +120,13 @@ module Node
     leader.ip_port_scratch <= [[ip_port]]
   end
 
-  bloom :stdio do 
-    stdio <~ server_type {|s| [["Server Type: #{s} #{ip_port} #{budtime} #{current_term.first.first}"]]}
+  bloom :stdio do
+    # Print useful things each tick
+    stdio <~ [["Server: #{ip_port} Type: #{server_type.first.first} Term: #{current_term.first.first} budtime: #{budtime}"]]
+#    stdio <~ current_term {|s| [["Current term: #{s} #{ip_port} #{budtime} #{current_term.first.first}"]]}
+#    stdio <~ server_type {|s| [["Server Type: #{s} #{ip_port} #{budtime} #{current_term.first.first}"]]}
     #stdio <~ candidate.outputSndRequestVote {|v| [["Candidate votes for me: #{v}"]]}
-    #stdio <~ candidate.inputSndRequestVote {|v| [["Candidate in requests: #{v}"]]}
-    stdio <~ reset {|v| [["Reset: #{v} #{budtime}"]]}
+#    stdio <~ candidate.inputSndRequestVote {|v| [["Candidate in requests: #{v}"]]}
+#    stdio <~ reset {|v| [["Reset: #{v} #{budtime}"]]}
   end
 end

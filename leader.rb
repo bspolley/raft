@@ -57,7 +57,7 @@ module Leader
     #stdio <~ ip_port_scratch {|l| [["IP: #{l}"]]}
     #stdio <~ outputSndAppendEntries {|l| [["outSndAppendEntries: #{l}"]]}
     #stdio <~ inputRspAppendEntries {|l| [["inputRspAppendEntries: #{l}"]]}
-    stdio <~ sndRequestVote {|s| [["Send Request Vote (in leader): #{s}"]]}
+#    stdio <~ sndRequestVote {|s| [["Send Request Vote (in leader): #{s}"]]}
   end
   
 

@@ -82,7 +82,7 @@ module Candidate
   bloom :stdio do 
     #stdio <~ ip_port {|i| [["IPPORT: #{i}"]]}
     #stdio <~ server_type {|s| [["Server type: #{s}"]]}
-    stdio <~ inputSndRequestVote {|s| [["Send Request Vote (in candidate): #{s}"]]}
+#    stdio <~ inputSndRequestVote {|s| [["Send Request Vote (in candidate): #{s}"]]}
     #stdio <~ inputSndAppendEntries {|s| [["Send Append Vote (in candidate): #{s}"]]}
     #stdio <~ better_candidate {|b| [["Better candidate: #{b}"]]}
     #stdio <~ is_follower {|f| [["Is follower: #{f}"]]}

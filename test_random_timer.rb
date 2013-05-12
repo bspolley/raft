@@ -21,6 +21,13 @@ class TestTimer < Test::Unit::TestCase
   
   def test_alarm
     @p1.reset <+ [["Reset"]]
+    @p1.reset <+ [["Reset"]]
+    @p1.reset <+ [["Reset"]]
+    @p1.reset <+ [["Reset"]]
+    @p1.tick
+    @p1.reset <+ [["Reset"]]
+    @p1.tick
+    @p1.reset <+ [["Reset"]]
     sleep(0.5)
     @p1.reset <+ [["Reset"]]
     sleep(0.5)
