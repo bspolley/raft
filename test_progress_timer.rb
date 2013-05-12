@@ -3,40 +3,17 @@ require 'bud'
 require 'test/unit'
 require 'progress_timer'
 
-module RandomTimerProtocol
-  state do
-    interface :input, :reset, [] => [:timer]
-    interface :output, :ring, [:name, :time_out]
-  end
-end
-
 class TestTimer < Test::Unit::TestCase
   class Timer
     include Bud
-    include RandomTimerProtocol
     include ProgressTimer
     
     state do 
-      scratch :one_alarm, [:name, :time_out]
-    end
-    
-    bootstrap do
-      set_alarm <= [random_input]
+      table :see_alarm, [:name, :time_out]
     end
     
     bloom do
-      del_alarm <= reset do
-        ["random"]
-      end
-      one_alarm <= [random_input]
-      set_alarm <+ (one_alarm * reset).lefts
-      set_alarm <+ (one_alarm * alarm).lefts
-      ring <= alarm
-      stdio <~ reset {|r| [["reset: #{budtime}"]]}
-    end
-    
-    def random_input
-      ["random", (500.0+rand(1000.0))/1000.0]
+      see_alarm <+ alarm
     end
     
   end
@@ -48,12 +25,13 @@ class TestTimer < Test::Unit::TestCase
   end
   
   def test_alarm
-    @p1.tick
-    @p1.reset <+ [['RESET']]
-    @p1.reset <+ [['RESET']]
-    @p1.tick
-    @p1.reset <+ [['RESET']]
-    sleep(4)
+    @p1.set_alarm <+ [["random", 0.5]]  
+    sleep(0.2)
+    @p1.del_alarm <+ [["random"]]
+    sleep(0.3)
+    @p1.set_alarm <+ [["random", 0.5]]  
+    sleep(0.7)
+    assert_equal(1, @p1.see_alarm.length)
   end
   
 end

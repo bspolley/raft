@@ -18,12 +18,14 @@ class TestCandidate < Test::Unit::TestCase
     bootstrap do
       current_term <= [[42]]
       log <= [[0, 0, "dummy"]]
+      candidate <= [[2]]
     end
     
     bloom do
       see_server_type <+- server_type
       see_reset <= reset
       log <+ log
+      candidate <+ candidate
       current_term <+ current_term
       see_next_current_term <+- next_current_term
       member <= [ [1, 'localhost:23451'], [2, 'localhost:23452'],

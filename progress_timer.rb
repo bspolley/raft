@@ -17,17 +17,13 @@ module ProgressTimer
 
   state do
     table :timer_state, [:name] => [:start_tm, :time_out]
-#    table :alrm_buf, set_alarm.schema
-    periodic :timer, 0.05
+    periodic :timer, 0.01
   end
 
   bloom :timer_logic do
-#    alrm_buf <= set_alarm
-#    temp :cyc <= (alrm_buf * timer)
     timer_state <= set_alarm do |s|
       [s.name, Time.now.to_f, s.time_out]
     end
-#    alrm_buf <- cyc.map{|s, t| s}
     alarm <= (timer_state * timer).map do |s, t|
       if Time.now.to_f - s.start_tm > s.time_out
         [s.name, s.time_out]
@@ -38,9 +34,8 @@ module ProgressTimer
   end
   
   bloom :stdio do
-#    stdio <~ alrm_buf {|s| [["Alarms: #{s} #{budtime}"]]}
-    stdio <~ alarm {|s| [["Ringing: #{s}"]]}
-#    stdio <~ timer {|s| [["tick: #{s}"]]}
+    #stdio <~ alarm {|s| [["Ringing: #{s}"]]}
+    #stdio <~ timer {|s| [["tick: #{s}"]]}
   end
   
 end

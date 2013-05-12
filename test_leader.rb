@@ -4,7 +4,7 @@ require 'test/unit'
 require 'leader'
 
 class TestLeader < Test::Unit::TestCase
-  class C
+  class L
     include Bud
     include Leader
     
@@ -17,11 +17,13 @@ class TestLeader < Test::Unit::TestCase
       log <= [[0, 0, "dummy"]]
       commit_index <= [[0]]
       current_term <= [[42]]
+      leader <= [[3]]
     end
     
     bloom do
       log <+ log
       current_term <+ current_term
+      leader <+ leader
       see_output_append_entries <= outputSndAppendEntries do |o|
         [budtime, o.leader, o.follower, o.term, o.prev_index, o.prev_term, o.entry, o.commit_index]
       end
@@ -39,7 +41,7 @@ class TestLeader < Test::Unit::TestCase
   end 
 
   def setup
-    @leader = C.new(:port =>12345)
+    @leader = L.new(:port =>12345)
     @leader.run_bg
   end
   
