@@ -2,7 +2,6 @@ require 'rubygems'
 require 'bud'
 require 'test/unit'
 require 'node'
-require 'ruby-debug'
 
 class TestNode < Test::Unit::TestCase
   class N
