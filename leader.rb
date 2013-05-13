@@ -11,7 +11,8 @@ module Leader
     scratch :member, [:ident] => [:host]
     scratch :log, [:index] => [:term, :command]
     scratch :current_term, [] => [:term]
-    table :commit_index, [] => [:index]
+    scratch :commit_index, [] => [:index]
+    scratch :new_commit_index, commit_index.schema
     scratch :server_type, [] => [:state]
     scratch :better_candidate, [] => inputSndRequestVote.schema
     periodic :heartbeat, 0.1

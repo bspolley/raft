@@ -16,6 +16,7 @@ module Follower
     scratch :next_current_term, [] => [:term]
     table :voted_for, [] => [:term]
     scratch :commit_index, [] => [:index]
+    scratch :new_commit_index, commit_index.schema
     scratch :server_type, [] => [:state]
     scratch :max_index, [] => [:index]
     scratch :candidate_valid_vote, inputSndRequestVote.schema

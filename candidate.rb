@@ -12,7 +12,7 @@ module Candidate
     scratch :log, [:index] => [:term, :command]
     scratch :current_term, [] => [:term]
     scratch :next_current_term, [] => [:term]
-    table :commit_index, [] => [:index]
+    scratch :commit_index, [] => [:index]
     scratch :server_type, [] => [:state]
     scratch :better_candidate, [] => inputSndRequestVote.schema
     scratch :ring, [:name, :time_out]

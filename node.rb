@@ -64,7 +64,7 @@ module Node
     current_term <+- follower.next_current_term
     follower.member <= member
     follower.commit_index <= commit_index
-    commit_index <+ follower.commit_index
+    commit_index <+- follower.new_commit_index
     server_type <+- ring do
       [NodeProtocol::CANDIDATE]
     end
@@ -98,7 +98,6 @@ module Node
     current_term <+- candidate.next_current_term
     candidate.member <= member
     candidate.commit_index <= commit_index
-    commit_index <+ candidate.commit_index
     server_type <+- candidate.server_type
     candidate.ring <= ring
     reset <= candidate.reset
@@ -125,7 +124,7 @@ module Node
     leader.current_term <= current_term
     leader.member <= member
     leader.commit_index <= commit_index
-    commit_index <+ leader.commit_index
+    commit_index <+- leader.new_commit_index
     server_type <+- leader.server_type
     leader.ip_port_scratch <= [[ip_port]]
     leader.new_entry <= (l * command_buffer).rights
