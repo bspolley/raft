@@ -98,8 +98,6 @@ class TestNode < Test::Unit::TestCase
     return hash[hash.keys.max]
   end
 
-
-  #assumptions made: 
   def test_add_one_entry
     sleep 3
     leader_hash = find_leader    
@@ -126,6 +124,32 @@ class TestNode < Test::Unit::TestCase
       end
       assert_equal(3, counter) # two things in log, bootstrap & our new entry
     end
+  end
+  
+  def test_add_one_entry_to_follower
+    sleep 3
+    leader_hash = find_leader
+    @nodes[hmi(leader_hash).index(0)].command <+ [[1, "hello world"]]
+    sleep 2
+    @nodes.each do |n|
+      counter = 0
+      n.log.each do |l|
+        counter += 1
+      end
+      assert_equal(2, counter) # two things in log, bootstrap & our new entry
+    end 
+  end
+  
+  def test_add_one_entry_all_followers
+    @p3.command <+ [[1, "hello world"]]
+    sleep 3 # to make sure the log propgates to all nodes
+    @nodes.each do |n|
+      counter = 0
+      n.log.each do |l|  
+        counter += 1
+      end
+      assert_equal(2, counter) # two things in log, bootstrap & our new entry
+    end 
   end
   
 end
