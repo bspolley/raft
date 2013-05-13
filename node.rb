@@ -28,8 +28,8 @@ module Node
     table :current_term, [] => [:term]
     table :commit_index, [] => [:index]
     table :command_buffer, command.schema
-    #table :leader, [] => [:ip]
-    #table :command_buffer, [:command]
+    table :outside_commands, command.schema
+    scratch :commited_commands, command.schema
   end
   
   bootstrap do
@@ -39,9 +39,14 @@ module Node
     commit_index <= [[0]]
   end
   
-  #bloom :command do
-    #command_buffer <= command
-  #end
+  bloom :outside_commands do
+    outside_commands <= command
+    commited_commands <= (outside_commands * log).pairs do |o, l|
+      o if l.command == o.entry_id.to_s + " " + e.entry and l.index <= commit_index.first.first
+    end
+    outside_commands <- commited_commands
+    command_ack <= commited_commands {|c| [c.entry_id]}
+  end
   
   bloom :election_timeout do
     not_ringing <= server_type do 

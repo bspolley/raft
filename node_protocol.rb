@@ -12,7 +12,7 @@ module NodeProtocol
     channel   :sndAppendEntries, [:leader, :@follower, :term, :prev_index, :prev_term, :entry, :commit_index]
     channel   :rspAppendEntries, [:@leader, :follower, :term]
     interface input,  :command, [:entry_id] => [:entry]
-    interface output,  :command_ack, [:committed]
+    interface output,  :command_ack, [:entry_id]
     channel   :sndCommand, [:@leader, :follower, :entry_id, :entry]
 #    channel   :rspCommand, [leader, @follower, :entry_id, :entry] 
     #interface input, :kdjf [:command]
