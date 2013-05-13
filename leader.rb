@@ -43,8 +43,12 @@ module Leader
     log_max <= (log * max_index).lefts do |l|
       [l.index, l.term, l.command] if l.index == max_index.first.first #entry and command same thing bad naming convention
     end
-    outputSndAppendEntries <= (heartbeat * member * leader).combos do |h, m, l|
-      [ip_port_scratch.first.first, m.host, current_term.first.first, log_max.first.index, log_max.first.term, log_max.first.entry, commit_index.first.first] unless m.host == ip_port_scratch.first.first
+    outputSndAppendEntries <= (log * heartbeat * member * leader).combos do |lo, h, m, le|
+      if lo.index == max_index.first.index - 1
+        [ip_port_scratch.first.first, m.host, current_term.first.first, lo.index, lo.term, log_max.first.entry, commit_index.first.first] unless m.host == ip_port_scratch.first.first
+      elsif max_index.first.index == 0
+        [ip_port_scratch.first.first, m.host, current_term.first.first, lo.index - 1, lo.term, log_max.first.entry, commit_index.first.first] unless m.host == ip_port_scratch.first.first
+      end
     end
   end
   

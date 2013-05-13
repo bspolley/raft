@@ -130,6 +130,6 @@ module Node
 #    stdio <~ candidate.outputSndRequestVote {|v| [["Candidate votes for me: #{v}"]]}
 #    stdio <~ candidate.inputSndRequestVote {|v| [["Candidate in requests: #{v}"]]}
 #    stdio <~ reset {|v| [["Reset: #{v} #{budtime}"]]}
-    stdio <~ sndAppendEntries { |s| [["sndAppendEntries: #{s} #{ip_port}"]]}
+#    stdio <~ sndAppendEntries { |s| [["sndAppendEntries: #{s} #{ip_port}"]]}
   end
 end
