@@ -105,7 +105,14 @@ class TestNode < Test::Unit::TestCase
     leader_hash = find_leader    
     @nodes[hmi(leader_hash).index(1)].command <+ [[1, "hello world"]]
     sleep 2
-    @nodes.each 
+    @nodes.each do |n|
+      counter = 0
+      n.log.each do |l|  
+        p n.ip_port + " " +  l.to_s
+        counter += 1
+      end
+      assert_equal(2, counter) # two things in log, bootstrap & our new entry
+    end 
 
   end
   

@@ -20,6 +20,7 @@ module Leader
     scratch :log_max, [] => [:index, :term, :entry]
     scratch :leader, [] => [:state]
     scratch :new_entry, [:entry_id] => [:entry]
+    scratch :log_add, [:index] => [:term, :command]
     #table :new_entry_buffer, new_entry.schema
   end
   
@@ -56,7 +57,7 @@ module Leader
   end
 
   bloom :append_entries do
-    log <+ new_entry do |e|
+    log_add <= new_entry do |e|
       [log_max.first.index + 1, current_term.first.first, e.entry]
     end
   end

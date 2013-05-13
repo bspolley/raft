@@ -111,7 +111,8 @@ module Node
     leader.inputSndAppendEntries <= (l * sndAppendEntries).rights
     sndAppendEntries <~ leader.outputSndAppendEntries
     leader.log <= log
-    log <+ leader.log
+    #log <+ leader.log
+    log <+ leader.log_add
     leader.current_term <= current_term
     leader.member <= member
     leader.commit_index <= commit_index
@@ -129,5 +130,6 @@ module Node
 #    stdio <~ candidate.outputSndRequestVote {|v| [["Candidate votes for me: #{v}"]]}
 #    stdio <~ candidate.inputSndRequestVote {|v| [["Candidate in requests: #{v}"]]}
 #    stdio <~ reset {|v| [["Reset: #{v} #{budtime}"]]}
+    stdio <~ sndAppendEntries { |s| [["sndAppendEntries: #{s} #{ip_port}"]]}
   end
 end
