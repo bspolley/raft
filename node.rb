@@ -118,6 +118,7 @@ module Node
     commit_index <+ leader.commit_index
     server_type <+- leader.server_type
     leader.ip_port_scratch <= [[ip_port]]
+    leader.new_entry <= (l * command).rights 
   end
 
   bloom :stdio do

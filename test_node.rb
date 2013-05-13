@@ -30,7 +30,6 @@ class TestNode < Test::Unit::TestCase
   
   
   def setup
-    #debugger
     @p1 = N.new(:port => 12345)
     @p1.run_bg
     @p2 = N.new(:port => 12346)
@@ -48,67 +47,66 @@ class TestNode < Test::Unit::TestCase
   
   def test_someone_becomes_leader
     sleep 3
-    leader = [0, 0, 0] 
-    @p1.state.each do |s|
-      if s.server_type == NodeProtocol::LEADER 
-        leader[0] = 1
-      end
+    leader_hash = find_leader
+    leader_hash.keys.each do |k|
+      assert(1 <= leader_hash[k].inject(:+))
     end
-    @p2.state.each do |s|
-      if s.server_type == NodeProtocol::LEADER 
-        leader[1] = 1
-      end
+
+  end
+  
+  def set_leader(hash, index, term)
+    if not hash[term]
+       hash[term] = [0,0,0]
     end
-    @p3.state.each do |s|
-      if s.server_type == NodeProtocol::LEADER 
-        leader[2] = 1
-      end
-    end
-    assert(leader.inject(:+) == 1)
+    hash[term][index] = 1
   end
 
-   def test_kill_a_node
+  def test_kill_a_node
     sleep 3
-    leader = [0, 0, 0] 
+    leader_hash = find_leader
+    current_leader = leader_hash[leader_hash.keys.max].index(1)
+    @nodes[current_leader].stop
+    sleep 3
+    leader_hash = find_leader
+
+    leader_hash.keys.each do |k|
+      assert(1 <= leader_hash[k].inject(:+))
+    end
+  end
+
+  def find_leader
+    leader_hash = {}
     @p1.state.each do |s|
       if s.server_type == NodeProtocol::LEADER 
-        leader[0] = 1
+        set_leader(leader_hash, 0, s.term)
       end
     end
-    @p2.state.each do |s|
+    @p2.state.each do |s| 
       if s.server_type == NodeProtocol::LEADER 
-        leader[1] = 1
+        set_leader(leader_hash, 1, s.term)
       end
     end
     @p3.state.each do |s|
       if s.server_type == NodeProtocol::LEADER 
-        leader[2] = 1
+        set_leader(leader_hash, 2, s.term)
       end
     end
-    assert(leader.inject(:+) == 1)
-    first_leader = leader.index(1)
-    @nodes[first_leader].stop
-    sleep 3
-    @p1.state.each do |s|
-      if s.server_type == NodeProtocol::LEADER 
-        leader[0] = 1
-      end
-    end
-    @p2.state.each do |s|
-      if s.server_type == NodeProtocol::LEADER 
-        leader[1] = 1
-      end
-    end
-    @p3.state.each do |s|
-      if s.server_type == NodeProtocol::LEADER 
-        leader[2] = 1
-      end
-    end
-    leader[first_leader] = 0
-    assert(leader.inject(:+) == 1)
- 
+    return leader_hash
+  end
+
+  def hmi(hash) #gets the value at the max index of the hash
+    return hash[hash.keys.max]
   end
 
 
+  #assumptions made: 
+  def test_add_one_entry
+    sleep 3
+    leader_hash = find_leader    
+    @nodes[hmi(leader_hash).index(1)].command <+ [[1, "hello world"]]
+    sleep 2
+    @nodes.each 
+
+  end
   
 end

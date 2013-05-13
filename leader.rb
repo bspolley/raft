@@ -14,11 +14,13 @@ module Leader
     table :commit_index, [] => [:index]
     scratch :server_type, [] => [:state]
     scratch :better_candidate, [] => inputSndRequestVote.schema
-    periodic :heartbeat, 0.2
+    periodic :heartbeat, 0.1
     scratch :max_index, [] => [:index]
     scratch :ip_port_scratch, [] => [:grr]
     scratch :log_max, [] => [:index, :term, :entry]
     scratch :leader, [] => [:state]
+    scratch :new_entry, [:entry_id] => [:entry]
+    #table :new_entry_buffer, new_entry.schema
   end
   
   bloom :leader_election do
@@ -28,7 +30,9 @@ module Leader
     server_type <= better_candidate.argagg(:choose, [], :candidate) do |p|
       [NodeProtocol::FOLLOWER]
     end
-    #TODO: Step down if we get an append entries that is of a term greater than ours
+    server_type <= inputSndAppendEntries do |s|
+      [NodeProtocol::FOLLOWER] if s.term > current_term.first.first
+    end
   end
   
   bloom :heartbeat do #<\3
@@ -43,13 +47,20 @@ module Leader
     end
   end
   
-  bloom :append_entries do
+  bloom :rsp_append_entries do
     outputSndAppendEntries <= (log * log * inputRspAppendEntries).combos do |l1, l2, i|
       if l1.index == i.index-1 and l2.index == i.index
         [ip_port_scratch.first.first, i.follower, current_term.first.first, l1.index, l1.term, l2.command, commit_index.first.first]
       end
     end
   end
+
+  bloom :append_entries do
+    log <+ new_entry do |e|
+      [log_max.first.index + 1, current_term.first.first, e.entry]
+    end
+  end
+
   
   bloom :stdio do
     #stdio <~ log_max {|l| [["LOG MAX: #{l}"]]}
