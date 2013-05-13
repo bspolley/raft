@@ -16,8 +16,6 @@ module Node
   import Candidate => :candidate
   import Leader => :leader
 
-  #TODO: need to add responses to append entries so leader can update commit index
-  #TODO: command inputs and acks back to client
   state do
     table :server_type, [] => [:state]
     scratch :f, server_type.schema #Follower 
@@ -31,6 +29,7 @@ module Node
     table :outside_commands, command.schema
     scratch :commited_commands, command.schema
     scratch :joined_log_and_buffer, [:log_index, :log_command, :entry_id, :entry, :commit_index]
+    periodic :resend_commands, 5
   end
   
   bootstrap do
@@ -45,13 +44,8 @@ module Node
     commited_commands <= (log * outside_commands * commit_index).combos do |l, o, c|
       o if l.command == o.entry_id.to_s + " " + o.entry and l.index <= commit_index.first.first
     end
-#    joined_log_and_buffer <= (log * outside_commands).pairs do |l, o|
-#      [l.index, l.command, o.entry_id.to_s, o.entry.to_s, commit_index.first.first]
-#    end
-#    commited_commands <= joined_log_and_buffer do |j|
-#      [j.entry_id, j.entry] if (j.index <= j.commit_index) and (j.log_command == j.entry_id.to_s + " " + j.entry)
-#    end
     outside_commands <- commited_commands
+    command <+ (resend_commands * outside_commands).rights
     command_ack <= commited_commands {|c| [c.entry_id]}
   end
   
@@ -162,9 +156,13 @@ module Node
 #    stdio <~ leader.chosen_one { |s| [["Chosen One: #{s} #{ip_port} #{budtime}"]]}
 #    stdio <~ leader.commited {|c| [["Commited: #{c} #{budtime}"]]}
 #    stdio <~ leader.follower_logs {|l| [["Follower Logs: #{l}"]]}
-    stdio <~ command_ack {|c| [["Command ack: #{c}"]]}
-    stdio <~ commited_commands {|c| [["Commited commands: #{c} #{budtime} #{ip_port}"]]}
+#    stdio <~ command_ack {|c| [["Command ack: #{c}"]]}
+#    stdio <~ commited_commands {|c| [["Commited commands: #{c} #{budtime} #{ip_port}"]]}
 #    stdio <~ commit_index {|i| [["Commit index: #{i} #{ip_port} #{budtime}"]]}
-    stdio <~ [["Server: #{ip_port} Type: #{server_type.first.first} log: #{log.inspected} outside_com: #{outside_commands.inspected} commit_index: #{commit_index.first.first} budtime: #{budtime}"]]
+#    stdio <~ leader.repeat_entry {|r| [["Repeat Entry: #{r} #{ip_port} #{budtime}"]]}
+#    stdio <~ leader.chosen_one {|o| [["Chosen_one: #{o} #{ip_port} #{budtime}"]]}
+#    stdio <~ leader.good_chosen_one {|o| [["Good chosen_one: #{o} #{ip_port} #{budtime}"]]}
+#    stdio <~ sndCommand {|s| [["Send Command: #{s} #{ip_port} #{budtime}"]]}
+#    stdio <~ [["Server: #{ip_port} Type: #{server_type.first.first} log: #{log.inspected} outside_com: #{outside_commands.inspected} commit_index: #{commit_index.first.first} budtime: #{budtime}"]]
   end
 end

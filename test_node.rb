@@ -130,7 +130,7 @@ class TestNode < Test::Unit::TestCase
     sleep 3
     leader_hash = find_leader
     @nodes[hmi(leader_hash).index(0)].command <+ [[1, "hello world"]]
-    sleep 2
+    sleep 3
     @nodes.each do |n|
       counter = 0
       n.log.each do |l|
@@ -142,7 +142,7 @@ class TestNode < Test::Unit::TestCase
   
   def test_add_one_entry_all_followers
     @p3.command <+ [[1, "hello world"]]
-    sleep 3 # to make sure the log propgates to all nodes
+    sleep 6 # to make sure a leader is chosen and the log propogates to everyone
     @nodes.each do |n|
       counter = 0
       n.log.each do |l|  
@@ -152,10 +152,17 @@ class TestNode < Test::Unit::TestCase
     end 
   end
   
-  def test_acks
+  def test_acks_from_leader
     sleep 3
     leader_hash = find_leader
     resp = @nodes[hmi(leader_hash).index(1)].sync_callback(:command, [[1, "hello world"]], :command_ack)
+    assert_equal([1], resp.first)
+  end
+  
+  def test_acks_from_follower
+    sleep 3
+    leader_hash = find_leader
+    resp = @nodes[hmi(leader_hash).index(0)].sync_callback(:command, [[1, "hello world"]], :command_ack)
     assert_equal([1], resp.first)
   end
   

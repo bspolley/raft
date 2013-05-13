@@ -24,6 +24,8 @@ module Leader
     scratch :log_add, [:index] => [:term, :command]
     table :new_entry_buffer, new_entry.schema
     scratch :chosen_one, new_entry.schema
+    scratch :good_chosen_one, new_entry.schema
+    scratch :repeat_entry, new_entry.schema
     table :follower_logs, [:follower, :index]
     scratch :commited, [:index]
   end
@@ -69,10 +71,6 @@ module Leader
       [i.follower, i.index-1]
     end
     #TODO: Make sure this is safe (ie something from current term included in the log)
-    # And then send back all the outside commands that correspond to a lower index
-    # In node do a join on commited index and a buffer for people waiting for a reply and log
-    # and then send back those in the buffer that are also in the log at an index less than 
-    # the commited index
     commited <= commit_index
     commited <= follower_logs.group([:index], count(:nums)) do |l|
       [l[0]] if (l[1] + 1) > member.count/2.0
@@ -84,7 +82,11 @@ module Leader
   bloom :append_entries do
     new_entry_buffer <= new_entry
     chosen_one <= new_entry_buffer.argagg(:choose, [], :entry)
-    log_add <= chosen_one do |e|
+    repeat_entry <= (chosen_one * log).pairs do |c, l|
+      c if c.entry_id.to_s + " " + c.entry == l.command
+    end
+    good_chosen_one <= chosen_one.notin(repeat_entry)
+    log_add <= good_chosen_one do |e|
       [log_max.first.index + 1, current_term.first.first, e.entry_id.to_s + " " + e.entry]
     end
     new_entry_buffer <- chosen_one
