@@ -82,11 +82,11 @@ module Leader
   bloom :append_entries do
     new_entry_buffer <= new_entry
     chosen_one <= new_entry_buffer.argagg(:choose, [], :entry)
-    repeat_entry <= (chosen_one * log).pairs do |c, l|
-      c if c.entry_id.to_s + " " + c.entry == l.command
-    end
-    good_chosen_one <= chosen_one.notin(repeat_entry)
-    log_add <= good_chosen_one do |e|
+#    repeat_entry <= (chosen_one * log).pairs do |c, l|
+#      c if c.entry_id.to_s + " " + c.entry == l.command
+#    end
+#    good_chosen_one <= chosen_one.notin(repeat_entry)
+    log_add <= chosen_one do |e|
       [log_max.first.index + 1, current_term.first.first, e.entry_id.to_s + " " + e.entry]
     end
     new_entry_buffer <- chosen_one

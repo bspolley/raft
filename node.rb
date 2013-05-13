@@ -28,8 +28,7 @@ module Node
     table :command_buffer, command.schema
     table :outside_commands, command.schema
     scratch :commited_commands, command.schema
-    scratch :joined_log_and_buffer, [:log_index, :log_command, :entry_id, :entry, :commit_index]
-    periodic :resend_commands, 5
+#    periodic :resend_commands, 5
   end
   
   bootstrap do
@@ -45,7 +44,7 @@ module Node
       o if l.command == o.entry_id.to_s + " " + o.entry and l.index <= commit_index.first.first
     end
     outside_commands <- commited_commands
-    command <+ (resend_commands * outside_commands).rights
+#    command <+ (resend_commands * outside_commands).rights
     command_ack <= commited_commands {|c| [c.entry_id]}
   end
   
@@ -163,6 +162,6 @@ module Node
 #    stdio <~ leader.chosen_one {|o| [["Chosen_one: #{o} #{ip_port} #{budtime}"]]}
 #    stdio <~ leader.good_chosen_one {|o| [["Good chosen_one: #{o} #{ip_port} #{budtime}"]]}
 #    stdio <~ sndCommand {|s| [["Send Command: #{s} #{ip_port} #{budtime}"]]}
-#    stdio <~ [["Server: #{ip_port} Type: #{server_type.first.first} log: #{log.inspected} outside_com: #{outside_commands.inspected} commit_index: #{commit_index.first.first} budtime: #{budtime}"]]
+    stdio <~ [["Server: #{ip_port} Type: #{server_type.first.first} log: #{log.inspected} outside_com: #{outside_commands.inspected} commit_index: #{commit_index.first.first} budtime: #{budtime}"]]
   end
 end
