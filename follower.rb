@@ -77,6 +77,9 @@ module Follower
         [a.leader, a.follower, max_index.first.first+2]
       end
     end
+    new_commit_index <= append_entry do |a|
+      [a.commit_index]
+    end
     #Follower max index less than leader's index (or equal to)
     outputRspAppendEntries <= append_entry do |a|
       if max_index.first.first < a.prev_index 

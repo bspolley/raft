@@ -30,6 +30,7 @@ module Node
     table :command_buffer, command.schema
     table :outside_commands, command.schema
     scratch :commited_commands, command.schema
+    scratch :joined_log_and_buffer, [:log_index, :log_command, :entry_id, :entry, :commit_index]
   end
   
   bootstrap do
@@ -41,9 +42,15 @@ module Node
   
   bloom :outside_commands do
     outside_commands <= command
-    commited_commands <= (outside_commands * log).pairs do |o, l|
-      o if l.command == o.entry_id.to_s + " " + e.entry and l.index <= commit_index.first.first
+    commited_commands <= (log * outside_commands * commit_index).combos do |l, o, c|
+      o if l.command == o.entry_id.to_s + " " + o.entry and l.index <= commit_index.first.first
     end
+#    joined_log_and_buffer <= (log * outside_commands).pairs do |l, o|
+#      [l.index, l.command, o.entry_id.to_s, o.entry.to_s, commit_index.first.first]
+#    end
+#    commited_commands <= joined_log_and_buffer do |j|
+#      [j.entry_id, j.entry] if (j.index <= j.commit_index) and (j.log_command == j.entry_id.to_s + " " + j.entry)
+#    end
     outside_commands <- commited_commands
     command_ack <= commited_commands {|c| [c.entry_id]}
   end
@@ -155,5 +162,9 @@ module Node
 #    stdio <~ leader.chosen_one { |s| [["Chosen One: #{s} #{ip_port} #{budtime}"]]}
 #    stdio <~ leader.commited {|c| [["Commited: #{c} #{budtime}"]]}
 #    stdio <~ leader.follower_logs {|l| [["Follower Logs: #{l}"]]}
+    stdio <~ command_ack {|c| [["Command ack: #{c}"]]}
+    stdio <~ commited_commands {|c| [["Commited commands: #{c} #{budtime} #{ip_port}"]]}
+#    stdio <~ commit_index {|i| [["Commit index: #{i} #{ip_port} #{budtime}"]]}
+    stdio <~ [["Server: #{ip_port} Type: #{server_type.first.first} log: #{log.inspected} outside_com: #{outside_commands.inspected} commit_index: #{commit_index.first.first} budtime: #{budtime}"]]
   end
 end

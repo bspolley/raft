@@ -78,7 +78,7 @@ module Leader
       [l[0]] if (l[1] + 1) > member.count/2.0
     end
     follower_logs <- (commited * follower_logs).rights(:index => :index)
-    new_commit_index <= commited.argagg(:max, [], :index)
+    new_commit_index <= (commited * leader).lefts.argagg(:max, [], :index)
   end
 
   bloom :append_entries do

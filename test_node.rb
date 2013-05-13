@@ -152,4 +152,11 @@ class TestNode < Test::Unit::TestCase
     end 
   end
   
+  def test_acks
+    sleep 3
+    leader_hash = find_leader
+    resp = @nodes[hmi(leader_hash).index(1)].sync_callback(:command, [[1, "hello world"]], :command_ack)
+    assert_equal([1], resp.first)
+  end
+  
 end
