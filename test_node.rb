@@ -112,7 +112,20 @@ class TestNode < Test::Unit::TestCase
       end
       assert_equal(2, counter) # two things in log, bootstrap & our new entry
     end 
-
+  end
+  
+  def test_add_two_entries
+    sleep 3
+    leader_hash = find_leader    
+    @nodes[hmi(leader_hash).index(1)].command <+ [[1, "hello world"], [2, "goodbye cruel world"]] #notemo
+    sleep 2
+    @nodes.each do |n|
+      counter = 0
+      n.log.each do |l|  
+        counter += 1
+      end
+      assert_equal(3, counter) # two things in log, bootstrap & our new entry
+    end
   end
   
 end

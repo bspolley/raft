@@ -55,6 +55,7 @@ module Node
     follower.inputSndRequestVote <= (not_ringing * f * sndRequestVote).combos {|r, c, v| v}
     rspRequestVote <~ (f * follower.outputRspRequestVote).rights
     follower.inputSndAppendEntries <= (not_ringing * f * sndAppendEntries).combos {|r, c, v| v}
+    rspAppendEntries <~ (f * follower.outputRspAppendEntries).rights
     follower.log <= log
     log <+ follower.log_add
     log <- follower.log_del
@@ -109,9 +110,9 @@ module Node
     end
     leader.inputSndRequestVote <= (l * sndRequestVote).rights
     leader.inputSndAppendEntries <= (l * sndAppendEntries).rights
+    leader.inputRspAppendEntries <= (l * rspAppendEntries).rights
     sndAppendEntries <~ leader.outputSndAppendEntries
     leader.log <= log
-    #log <+ leader.log
     log <+ leader.log_add
     leader.current_term <= current_term
     leader.member <= member
@@ -130,6 +131,10 @@ module Node
 #    stdio <~ candidate.outputSndRequestVote {|v| [["Candidate votes for me: #{v}"]]}
 #    stdio <~ candidate.inputSndRequestVote {|v| [["Candidate in requests: #{v}"]]}
 #    stdio <~ reset {|v| [["Reset: #{v} #{budtime}"]]}
+#    stdio <~ rspAppendEntries { |s| [["rspAppendEntries: #{s} #{ip_port}"]]}
 #    stdio <~ sndAppendEntries { |s| [["sndAppendEntries: #{s} #{ip_port}"]]}
+#    stdio <~ follower.outputRspAppendEntries {|v| [["RspAppendEntries: #{v}"]]}
+#    stdio <~ leader.inputRspAppendEntries {|v| [["input RspAppendEntries: #{v} #{ip_port}"]]}
+#    stdio <~ leader.chosen_one { |s| [["Chosen One: #{s} #{ip_port} #{budtime}"]]}
   end
 end

@@ -21,7 +21,8 @@ module Leader
     scratch :leader, [] => [:state]
     scratch :new_entry, [:entry_id] => [:entry]
     scratch :log_add, [:index] => [:term, :command]
-    #table :new_entry_buffer, new_entry.schema
+    table :new_entry_buffer, new_entry.schema
+    scratch :chosen_one, new_entry.schema
   end
   
   bloom :leader_election do
@@ -61,9 +62,12 @@ module Leader
   end
 
   bloom :append_entries do
-    log_add <= new_entry do |e|
+    new_entry_buffer <= new_entry
+    chosen_one <= new_entry_buffer.argagg(:choose, [], :entry)
+    log_add <= chosen_one do |e|
       [log_max.first.index + 1, current_term.first.first, e.entry]
     end
+    new_entry_buffer <- chosen_one
   end
 
   
