@@ -27,6 +27,7 @@ module Node
     table :log, [:index] => [:term, :command]
     table :current_term, [] => [:term]
     table :commit_index, [] => [:index]
+    table :command_buffer, command.schema
     #table :leader, [] => [:ip]
     #table :command_buffer, [:command]
   end
@@ -71,6 +72,12 @@ module Node
       [current_term.first.first + 1]
     end
     reset <= follower.reset
+    command_buffer <= (f * command).rights
+    follower.command_buffer <= command_buffer
+    sndCommand <~ follower.outputSndCommand
+    command_buffer <- follower.outputSndCommand do |o|
+      [o.entry_id, o.entry]
+    end
   end
 
   bloom :candidate do
@@ -96,6 +103,7 @@ module Node
     candidate.ring <= ring
     reset <= candidate.reset
     candidate.ip_port_scratch <= [[ip_port]]
+    command_buffer <= (c * command).rights
   end
 
   bloom :leader do
@@ -120,7 +128,12 @@ module Node
     commit_index <+ leader.commit_index
     server_type <+- leader.server_type
     leader.ip_port_scratch <= [[ip_port]]
-    leader.new_entry <= (l * command).rights 
+    leader.new_entry <= (l * command_buffer).rights
+    command_buffer <- (l * command_buffer).rights
+    leader.new_entry <= (l * command).rights
+    leader.new_entry <= (l * sndCommand).rights do |c|
+      [c.entry_id, c.entry]
+    end 
   end
 
   bloom :stdio do

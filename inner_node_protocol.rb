@@ -11,6 +11,7 @@ module InnerNodeProtocol
     interface input,   :inputSndAppendEntries, [:leader, :follower, :term, :prev_index, :prev_term, :entry, :commit_index]
     interface output,  :outputRspAppendEntries, [:leader, :follower, :index]
     interface input,   :inputRspAppendEntries, [:leader, :follower, :index]
+    interface output,  :outputSndCommand, [:leader, :follower, :entry_id, :entry]
   end
 end
 

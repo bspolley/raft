@@ -26,9 +26,9 @@ module Follower
     scratch :append_entry, inputSndAppendEntries.schema
     scratch :reset, [] => [:timer]
     scratch :response_append_entry, outputRspAppendEntries.schema
+    scratch :command_buffer, command.schema
   end
   
-  #TODO: reset timer if get heartbeat from LEADER
   bloom :leader_election do
     max_index <= log.argmax([], :index) do |l|
       [l.index]
@@ -102,6 +102,12 @@ module Follower
     end
       
   end
+  
+  bloom :forward_commands do
+    outputSndCommand <= (command_buffer * append_entry).pairs do |c, a|
+      [a.leader, a.follower, c.entry_id, c.entry]
+    end
+  end 
   
   bloom :stdio do
     #stdio <~ pos_votes {|p| [["Pos votes: #{p}"]]}
