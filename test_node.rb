@@ -108,7 +108,6 @@ class TestNode < Test::Unit::TestCase
     @nodes.each do |n|
       counter = 0
       n.log.each do |l|  
-        p n.ip_port + " " +  l.to_s
         counter += 1
       end
       assert_equal(2, counter) # two things in log, bootstrap & our new entry
