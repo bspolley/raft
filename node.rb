@@ -149,5 +149,7 @@ module Node
 #    stdio <~ follower.outputRspAppendEntries {|v| [["RspAppendEntries: #{v}"]]}
 #    stdio <~ leader.inputRspAppendEntries {|v| [["input RspAppendEntries: #{v} #{ip_port}"]]}
 #    stdio <~ leader.chosen_one { |s| [["Chosen One: #{s} #{ip_port} #{budtime}"]]}
+#    stdio <~ leader.commited {|c| [["Commited: #{c} #{budtime}"]]}
+#    stdio <~ leader.follower_logs {|l| [["Follower Logs: #{l}"]]}
   end
 end

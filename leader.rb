@@ -23,6 +23,8 @@ module Leader
     scratch :log_add, [:index] => [:term, :command]
     table :new_entry_buffer, new_entry.schema
     scratch :chosen_one, new_entry.schema
+    table :follower_logs, [:follower, :index]
+    scratch :commited, [:index]
   end
   
   bloom :leader_election do
@@ -58,6 +60,19 @@ module Leader
       if l1.index == i.index-1 and l2.index == i.index
         [ip_port_scratch.first.first, i.follower, current_term.first.first, l1.index, l1.term, l2.command, commit_index.first.first]
       end
+    end
+    follower_logs <= inputRspAppendEntries do |i|
+      [i.follower, i.index-1]
+    end
+    #TODO: Make sure this is safe
+    # Commited contains all the log indicies of the entries commited by this leader
+    # Need to find the max and put that as commited index
+    # And then send back all the outside commands that correspond to a lower index
+    # In node do a join on commited index and a buffer for people waiting for a reply and log
+    # and then send back those in the buffer that are also in the log at an index less than 
+    # the commited index
+    commited <= follower_logs.group([:index], count(:nums)) do |l|
+      [l[0]] if (l[1] + 1) > member.count/2.0
     end
   end
 
