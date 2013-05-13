@@ -122,7 +122,7 @@ module Node
 
   bloom :stdio do
     # Print useful things each tick
-    stdio <~ [["Server: #{ip_port} Type: #{server_type.first.first} Term: #{current_term.first.first} budtime: #{budtime}"]]
+    #stdio <~ [["Server: #{ip_port} Type: #{server_type.first.first} Term: #{current_term.first.first} budtime: #{budtime}"]]
 #    stdio <~ current_term {|s| [["Current term: #{s} #{ip_port} #{budtime} #{current_term.first.first}"]]}
 #    stdio <~ server_type {|s| [["Server Type: #{s} #{ip_port} #{budtime} #{current_term.first.first}"]]}
 #    stdio <~ candidate.outputSndRequestVote {|v| [["Candidate votes for me: #{v}"]]}
