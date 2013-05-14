@@ -160,6 +160,20 @@ class TestFollower < Test::Unit::TestCase
       assert_equal(3, @follower.see_next_current_term.first.first)
       assert_equal(1, @follower.see_log_add.length)
       assert_equal(1, @follower.see_reset.length)
+      assert_equal(0, @follower.see_log_del.length)
+    end
+  end
+  
+  def test_append_heartbeat
+    @follower.sync_do { @follower.log <+ [[1, 1, 'a'], [2, 2, 'a'], [3, 2, 'b']]}
+    4.times { @follower.sync_do }
+    @follower.sync_do { @follower.inputSndAppendEntries <+ [['localhost:12346', 'localhost:12345', 3, 2, 2, 'b', 2]]}
+    4.times { @follower.sync_do }
+    @follower.sync_do do
+      assert_equal(3, @follower.see_next_current_term.first.first)
+      assert_equal(0, @follower.see_log_add.length)
+      assert_equal(1, @follower.see_reset.length)
+      assert_equal(0, @follower.see_log_del.length)
     end
   end
   
@@ -210,7 +224,7 @@ class TestFollower < Test::Unit::TestCase
       assert_equal(4, @follower.see_next_current_term.first.first)
       assert_equal(1, @follower.see_log_add.length)
       assert_equal('entry2', @follower.see_log_add.first.command)
-      assert_equal(0, @follower.see_output_rsp_entries.length)
+      assert_equal(1, @follower.see_output_rsp_entries.length)
       assert_equal(0, @follower.see_log_del.length)
     end
   end

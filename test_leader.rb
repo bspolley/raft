@@ -24,6 +24,7 @@ class TestLeader < Test::Unit::TestCase
       log <+ log
       current_term <+ current_term
       leader <+ leader
+      commit_index <+ commit_index
       see_output_append_entries <= outputSndAppendEntries do |o|
         [budtime, o.leader, o.follower, o.term, o.prev_index, o.prev_term, o.entry, o.commit_index]
       end

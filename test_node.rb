@@ -77,7 +77,7 @@ class TestNode < Test::Unit::TestCase
   end
   
   def test_someone_becomes_leader
-    sleep 3
+    sleep 5
     leader_hash = find_leader
     leader_hash.keys.each do |k|
       assert(1 <= leader_hash[k].inject(:+))
@@ -85,7 +85,7 @@ class TestNode < Test::Unit::TestCase
   end
 
   def test_kill_a_node
-    sleep 3
+    sleep 4
     leader_hash = find_leader
     current_leader = leader_hash[leader_hash.keys.max].index(1)
     @nodes[current_leader].stop # kill the leader
@@ -97,7 +97,7 @@ class TestNode < Test::Unit::TestCase
   end
 
   def test_add_one_entry
-    sleep 3
+    sleep 4
     leader_hash = find_leader
     resp = @nodes[hmi(leader_hash).index(1)].sync_callback(:command, [[1, "hello world"]], :command_ack)
     sleep 2
@@ -110,22 +110,8 @@ class TestNode < Test::Unit::TestCase
     end 
   end
   
-  def test_add_two_entries
-    sleep 3
-    leader_hash = find_leader    
-    @nodes[hmi(leader_hash).index(1)].command <+ [[1, "hello world"], [2, "goodbye cruel world"]] #notemo
-    sleep 4
-    @nodes.each do |n|
-      counter = 0
-      n.log.each do |l|  
-        counter += 1
-      end
-      assert_equal(3, counter) # two things in log, bootstrap & our new entry
-    end
-  end
-  
   def test_add_one_entry_to_follower
-    sleep 3
+    sleep 4
     leader_hash = find_leader
     resp = @nodes[hmi(leader_hash).index(0)].sync_callback(:command, [[1, "hello world"]], :command_ack)
     sleep 2
@@ -138,27 +124,15 @@ class TestNode < Test::Unit::TestCase
     end 
   end
   
-  def test_add_one_entry_when_all_followers
-    resp = @p3.sync_callback(:command, [[1, "hello world"]], :command_ack)
-    sleep 3 # to make sure a leader is chosen and the log propogates to everyone
-    @nodes.each do |n|
-      counter = 0
-      n.log.each do |l|  
-        counter += 1
-      end
-      assert_equal(2, counter) # two things in log, bootstrap & our new entry
-    end 
-  end
-  
   def test_acks_from_leader
-    sleep 3
+    sleep 4
     leader_hash = find_leader
     resp = @nodes[hmi(leader_hash).index(1)].sync_callback(:command, [[1, "hello world"]], :command_ack)
     assert_equal([1], resp.first)
   end
   
   def test_acks_from_follower
-    sleep 3
+    sleep 4
     leader_hash = find_leader
     resp = @nodes[hmi(leader_hash).index(0)].sync_callback(:command, [[1, "hello world"]], :command_ack)
     assert_equal([1], resp.first)

@@ -33,7 +33,7 @@ module RandomTimer
   end
   
   def random_input
-    ["random", (500.0+rand(1000.0))/1000.0]
+    ["random", (500.0+rand(2000.0))/1000.0]
   end
   
   bloom :stdio do

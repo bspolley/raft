@@ -23,6 +23,7 @@ module Follower
     scratch :pos_votes, inputSndRequestVote.schema
     scratch :valid_vote, inputSndRequestVote.schema
     scratch :log_max_term, [] => [:term]
+    scratch :log_max_entry, [] => [:entry]
     scratch :append_entries, inputSndAppendEntries.schema
     scratch :append_entry, inputSndAppendEntries.schema
     scratch :reset, [] => [:timer]
@@ -35,7 +36,10 @@ module Follower
       [l.index]
     end
     log_max_term <= (log * max_index).lefts do |l|
-      [l.term ] if l.index == firsty(max_index)
+      [l.term] if l.index == firsty(max_index)
+    end
+    log_max_entry <= (log * max_index).lefts do |l|
+      [l.command] if l.index == firsty(max_index)
     end
     pos_votes <= inputSndRequestVote do |s|
       if s.term > firsty(current_term)
@@ -73,7 +77,8 @@ module Follower
       end
     end
     outputRspAppendEntries <= append_entry do |a|
-      if max_index.first.first == a.prev_index 
+      if max_index.first.first == a.prev_index and 
+        log_max_term.first.first == a.prev_term
         [a.leader, a.follower, max_index.first.first+2]
       end
     end
@@ -82,7 +87,7 @@ module Follower
     end
     #Follower max index less than leader's index (or equal to)
     outputRspAppendEntries <= append_entry do |a|
-      if max_index.first.first < a.prev_index 
+      if max_index.first.first < a.prev_index
         [a.leader, a.follower, max_index.first.first+1]
       end
     end
@@ -94,18 +99,20 @@ module Follower
     end
     #Send same request after we del uncommitted entries from our log
     outputRspAppendEntries <= append_entry do |a|
-      if max_index.first.first > a.prev_index
+      if max_index.first.first > a.prev_index and not (max_index.first.first == a.prev_index + 1 and log_max_entry.first.first == a.entry)
         [a.leader, a.follower, a.prev_index+1]
+      elsif (max_index.first.first == a.prev_index + 1 and log_max_entry.first.first == a.entry)
+        [a.leader, a.follower, a.prev_index+2] # this is a heartbeat and already in the log
       end
     end
     log_del <= (log*append_entry).pairs do |l,a|
-      if max_index.first.first > a.prev_index and l.index > a.prev_index
+      if max_index.first.first > a.prev_index and l.index > a.prev_index and
+         not (max_index.first.first == a.prev_index + 1 and log_max_entry.first.first == a.entry)
         l
       end
     end
     log_del <= (log*append_entry).pairs do |l,a|
-      if max_index.first.first == a.prev_index and log_max_term.first.first != a.prev_term and
-        l.index == max_index.first.first
+      if max_index.first.first == a.prev_index and log_max_term.first.first != a.prev_term and l.index == max_index.first.first
         l
       end
     end

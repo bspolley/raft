@@ -26,7 +26,7 @@ module Node
     table :current_term, [] => [:term]
     table :commit_index, [] => [:index]
     table :command_buffer, command.schema
-    table :outside_commands, command.schema
+    table :outside_commands, command.schema  # commands that are waiting to be commited
     scratch :commited_commands, command.schema
     periodic :resend_commands, 5
   end
@@ -44,7 +44,7 @@ module Node
       o if l.command == o.entry_id.to_s + " " + o.entry and l.index <= c.index
     end
     outside_commands <- commited_commands
-#    command <+ (resend_commands * outside_commands).rights
+    command <+ (resend_commands * outside_commands).rights
     command_ack <= commited_commands {|c| [c.entry_id]}
   end
   
@@ -98,7 +98,6 @@ module Node
     sndRequestVote <~ candidate.outputSndRequestVote
     candidate.inputSndAppendEntries <= (c * sndAppendEntries).rights
     candidate.log <= log
-    log <+ candidate.log
     candidate.current_term <= current_term
     current_term <+- candidate.next_current_term
     candidate.member <= member
@@ -162,6 +161,8 @@ module Node
 #    stdio <~ leader.chosen_one {|o| [["Chosen_one: #{o} #{ip_port} #{budtime}"]]}
 #    stdio <~ leader.good_chosen_one {|o| [["Good chosen_one: #{o} #{ip_port} #{budtime}"]]}
 #    stdio <~ sndCommand {|s| [["Send Command: #{s} #{ip_port} #{budtime}"]]}
-    stdio <~ [["Server: #{ip_port} Type: #{server_type.first.first} log: #{log.inspected} outside_com: #{outside_commands.inspected} commit_index: #{commit_index.first.first} budtime: #{budtime}"]]
+#    stdio <~ follower.log_del {|l| [["Log Delete: #{l} #{ip_port} #{budtime}"]]}
+#    stdio <~ follower.log_add {|l| [["Log Add: #{l} #{ip_port} #{budtime}"]]}
+    stdio <~ [["Server: #{ip_port} Type: #{server_type.first.first} Curr term: #{current_term.first.first} log: #{log.inspected} commit_index: #{commit_index.first.first} budtime: #{budtime}"]]
   end
 end
