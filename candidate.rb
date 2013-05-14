@@ -36,7 +36,7 @@ module Candidate
       v if server_type.first.first == NodeProtocol::LEADER
     end
   end
-  #TODO: step down if get hearbeat from Leader if >= term
+
   bloom :leader_election do
     better_candidate <= inputSndRequestVote do |s|
       s if s.term > current_term.first.first

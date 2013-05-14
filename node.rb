@@ -28,7 +28,7 @@ module Node
     table :command_buffer, command.schema
     table :outside_commands, command.schema
     scratch :commited_commands, command.schema
-#    periodic :resend_commands, 5
+    periodic :resend_commands, 5
   end
   
   bootstrap do
@@ -41,7 +41,7 @@ module Node
   bloom :outside_commands do
     outside_commands <= command
     commited_commands <= (log * outside_commands * commit_index).combos do |l, o, c|
-      o if l.command == o.entry_id.to_s + " " + o.entry and l.index <= commit_index.first.first
+      o if l.command == o.entry_id.to_s + " " + o.entry and l.index <= c.index
     end
     outside_commands <- commited_commands
 #    command <+ (resend_commands * outside_commands).rights
