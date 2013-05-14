@@ -28,7 +28,7 @@ Protocol between nodes as well as how an external client would send commands to 
 ```
 interface input,  :command
 ```
-Input for external client to send command they want persisted to the log
+Input for external client to send command they want persisted to the log (the entry_id must be globally unique)
 
 ```
 interface output,  :command_ack
